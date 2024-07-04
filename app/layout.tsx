@@ -1,11 +1,18 @@
-export default function RootLayout({
+import Footer from './_components/Footer';
+import Header from './_components/Header';
+
+import './globals.css';
+
+export default function Layout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: Readonly<React.PropsWithChildren>) {
   return (
     <html lang="ko">
-      <body>{children}</body>
+      <body>
+        <Header />
+        {children}
+        <Footer />
+      </body>
     </html>
   );
 }
