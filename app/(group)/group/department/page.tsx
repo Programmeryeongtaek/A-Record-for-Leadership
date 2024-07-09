@@ -1,7 +1,32 @@
+"use client";
+
+import { supabase } from "@/utils/supabase";
 import Image from "next/image";
 import Link from "next/link";
+import { FormEvent, useState } from "react";
 
 const GroupPage = () => {
+	const [message, setMessage] = useState<string>("");
+
+	const onSubmit = async (e: FormEvent) => {
+		e.preventDefault();
+
+		if (!message) {
+			console.log("메시지를 작성해주세요.");
+			return;
+		}
+
+		try {
+			const { data, error } = await supabase.from("EncouragementMessage").insert([{ message }]).select();
+
+			if (error) {
+				throw error;
+			}
+		} catch (error) {
+			alert("데이터를 저장하는 데 실패했습니다.");
+		}
+	};
+
 	return (
 		<section className="flex flex-col gap-4">
 			<header className="gpa-2 flex h-[100px] flex-col border">
@@ -34,13 +59,13 @@ const GroupPage = () => {
 			</main>
 			<footer className="flex flex-col gap-2">
 				<h3>응원</h3>
-				<form className="flex">
-					<textarea id="comment" name="comment" placeholder="응원 메시지를 남겨주세요~" />
+				<form className="flex" onSubmit={onSubmit}>
+					<textarea id="comment" name="comment" placeholder="응원 메시지를 남겨주세요~" value={message} onChange={(e) => setMessage(e.target.value)} />
 					<button type="submit">작성</button>
 				</form>
 				<div>
 					<ol className="flex gap-4">
-						<li className="h-[200px] w-[200px] border">댓글1</li>
+						<li className="flex h-[200px] w-[200px] flex-col border">{message}</li>
 						<li className="h-[200px] w-[200px] border">댓글2</li>
 						<li className="h-[200px] w-[200px] border">댓글3</li>
 						<li className="h-[200px] w-[200px] border">댓글4</li>
