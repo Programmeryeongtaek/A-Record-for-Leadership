@@ -3,25 +3,50 @@
 import { supabase } from "@/utils/supabase";
 import Image from "next/image";
 import Link from "next/link";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
+
+interface EncouragementMessage {
+	id: number;
+	message: string;
+}
 
 const GroupPage = () => {
 	const [message, setMessage] = useState<string>("");
+	const [messageList, setMessageList] = useState<EncouragementMessage[]>([]);
+
+	useEffect(() => {
+		fetchMessage();
+	}, []);
+
+	const fetchMessage = async () => {
+		try {
+			const { data, error } = await supabase.from("EncouragementMessage").select("*").order("id", { ascending: false });
+			if (error) {
+				throw error;
+			}
+			setMessageList(data);
+		} catch (error) {
+			alert("데이터를 가져오는 데 실패했습니다.");
+		}
+	};
 
 	const onSubmit = async (e: FormEvent) => {
 		e.preventDefault();
 
 		if (!message) {
-			console.log("메시지를 작성해주세요.");
+			alert("메시지를 작성해주세요.");
 			return;
 		}
 
 		try {
-			const { data, error } = await supabase.from("EncouragementMessage").insert([{ message }]).select();
+			const { data, error } = await supabase.from("EncouragementMessage").insert([{ message }]).select("*");
 
 			if (error) {
 				throw error;
 			}
+
+			setMessageList([...messageList, { id: data[0].id, message: message }]);
+			setMessage("");
 		} catch (error) {
 			alert("데이터를 저장하는 데 실패했습니다.");
 		}
@@ -65,11 +90,9 @@ const GroupPage = () => {
 				</form>
 				<div>
 					<ol className="flex gap-4">
-						<li className="flex h-[200px] w-[200px] flex-col border">{message}</li>
-						<li className="h-[200px] w-[200px] border">댓글2</li>
-						<li className="h-[200px] w-[200px] border">댓글3</li>
-						<li className="h-[200px] w-[200px] border">댓글4</li>
-						<li className="h-[200px] w-[200px] border">댓글5</li>
+						{messageList.map((message, i) => (
+							<li key={i}>{message.message}</li>
+						))}
 					</ol>
 				</div>
 			</footer>
