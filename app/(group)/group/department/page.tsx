@@ -70,6 +70,11 @@ const GroupPage = () => {
 		}
 	};
 
+	const handleNoticeClick = (notice: Notice) => {
+		setSelectedNotice(notice);
+		setModalVisible(true);
+	};
+
 	const onSubmit = async (e: FormEvent) => {
 		e.preventDefault();
 
@@ -102,10 +107,20 @@ const GroupPage = () => {
 				<div>
 					<ul>
 						{notices.map((notice) => (
-							<li key={notice.id}>{notice.title}</li>
+							<li key={notice.id} onClick={() => handleNoticeClick(notice)}>
+								{notice.title}
+							</li>
 						))}
 					</ul>
 				</div>
+
+				{modalVisible && selectedNotice && (
+					<div>
+						<h2>{selectedNotice.title}</h2>
+						<p>{selectedNotice.content}</p>
+						<button onClick={() => setModalVisible(false)}>X</button>
+					</div>
+				)}
 
 				{modalVisible && (
 					<div className="z-10 h-[50px] w-[50px]">
