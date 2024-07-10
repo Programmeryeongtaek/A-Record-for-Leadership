@@ -23,6 +23,8 @@ const GroupPage = () => {
 	const [notices, setNotices] = useState<Notice[]>([]);
 	const [modalVisible, setModalVisible] = useState(false);
 	const [selectedNotice, setSelectedNotice] = useState<Notice | null>(null);
+	const [itemsToShow, setItemsToShow] = useState(5);
+	const [listVisible, setListVisible] = useState(true);
 
 	const fetchNotice = async () => {
 		try {
@@ -52,6 +54,9 @@ const GroupPage = () => {
 
 	useEffect(() => {
 		fetchMessage();
+		handleResize();
+		window.addEventListener("resize", handleResize);
+		return () => window.removeEventListener("resize", handleResize);
 	}, []);
 
 	const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -97,21 +102,33 @@ const GroupPage = () => {
 		}
 	};
 
+	const handleResize = () => {
+		if (window.innerWidth >= 1200) {
+			setItemsToShow(5);
+		} else if (window.innerWidth > 768) {
+			setItemsToShow(4);
+		} else {
+			setItemsToShow(3);
+		}
+	};
+
 	return (
 		<section className="flex flex-col gap-4">
-			<header className="gpa-2 flex h-[100px] flex-col border">
+			<header className="gpa-2 flex flex-col border">
 				<div className="flex justify-between">
 					<h1>공지사항</h1>
 					<button onClick={() => setModalVisible(true)}>등록</button>
 				</div>
 				<div>
-					<ul>
-						{notices.map((notice) => (
+					<ul className={`overflow-hidden transition-all ${listVisible ? "max-h-[200px]" : "max-h-0"}`}>
+						{notices.slice(0, itemsToShow).map((notice) => (
 							<li key={notice.id} onClick={() => handleNoticeClick(notice)}>
 								{notice.title}
 							</li>
 						))}
 					</ul>
+					{/* // TODO: 토글 : 최대 7, 6, 5개 -- 최소 기기별 최소 갯수 */}
+					{notices.length > itemsToShow && <button>{listVisible ? "▼" : "▲"}</button>}
 				</div>
 
 				{modalVisible && (
@@ -156,7 +173,6 @@ const GroupPage = () => {
 				{/* TODO: map으로 생성 */}
 				<Link href="/">
 					<div className="flex h-[300px] w-[300px] flex-col gap-2 rounded-[10px] border">
-						<Image src="" width={300} height={250} alt="썸네일" />
 						<hr />
 						<div className="bottom-0 flex flex-col gap-1 p-1">
 							<h3>부서명</h3>
