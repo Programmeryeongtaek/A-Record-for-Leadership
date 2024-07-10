@@ -1,8 +1,8 @@
 "use client";
 
 import { supabase } from "@/utils/supabase";
-import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 
 interface Notice {
@@ -16,15 +16,27 @@ interface EncouragementMessage {
 	message: string;
 }
 
+interface DepartmentInfo {
+	id: number;
+	name: string;
+	member: string[];
+	tags: string[];
+}
+
 const GroupPage = () => {
 	const [message, setMessage] = useState<string>("");
 	const [messageList, setMessageList] = useState<EncouragementMessage[]>([]);
 	const [newNotice, setNewNotice] = useState({ title: "", content: "" });
 	const [notices, setNotices] = useState<Notice[]>([]);
-	const [modalVisible, setModalVisible] = useState(false);
+	const [noticeModalVisible, setNoticeModalVisible] = useState(false);
+	const [departmentModalVisible, setDepartmentModalVisible] = useState(false);
 	const [selectedNotice, setSelectedNotice] = useState<Notice | null>(null);
 	const [itemsToShow, setItemsToShow] = useState(5);
-	const [listVisible, setListVisible] = useState(true);
+	const [noticeListVisible, setNoticeListVisible] = useState(true);
+	const [departmentList, setDepartmentList] = useState<DepartmentInfo[]>([]);
+	const [departmentInfo, setDepartmentInfo] = useState({ name: "", member: "", tags: "" });
+
+	const router = useRouter();
 
 	const fetchNotice = async () => {
 		try {
@@ -42,14 +54,25 @@ const GroupPage = () => {
 			if (error) throw error;
 			setNotices([...notices, data[0]]);
 			setNewNotice({ title: "", content: "" });
-			setModalVisible(false);
+			setNoticeModalVisible(false);
 		} catch (error) {
 			console.error("공지사항을 등록하는 중 오류가 발생했습니다:", message);
 		}
 	};
 
+	const fetchDepartment = async () => {
+		try {
+			const { data, error } = await supabase.from("Department").select("*");
+			if (error) throw error;
+			setDepartmentList(data || []);
+		} catch (error) {
+			console.error("마을 정보를 불러오는 중 오류가 발생했습니다:", message);
+		}
+	};
+
 	useEffect(() => {
 		fetchNotice();
+		fetchDepartment();
 		fetchMessage();
 		handleResize();
 		window.addEventListener("resize", handleResize);
@@ -74,7 +97,7 @@ const GroupPage = () => {
 
 	const handleNoticeClick = (notice: Notice) => {
 		setSelectedNotice(notice);
-		setModalVisible(true);
+		setNoticeModalVisible(true);
 	};
 
 	const onSubmit = async (e: FormEvent) => {
@@ -109,15 +132,25 @@ const GroupPage = () => {
 		}
 	};
 
+	const createDepartment = async () => {
+		try {
+			const { data, error } = await supabase.from("Department").insert([departmentInfo]).select("*");
+			if (error) throw error;
+			router.push(`/group/department/${data[0].id}`);
+		} catch (error) {
+			console.error("마을을 생성하는 데 실패했습니다:", message);
+		}
+	};
+
 	return (
 		<section className="flex flex-col gap-4">
 			<header className="gpa-2 flex flex-col gap-4 border p-2">
 				<div className="flex justify-between">
 					<h1>공지사항</h1>
-					<button onClick={() => setModalVisible(true)}>등록</button>
+					<button onClick={() => setNoticeModalVisible(true)}>등록</button>
 				</div>
 				<div className="flex flex-col">
-					<ul className={`overflow-hidden transition-all ${listVisible ? "max-h-[200px]" : "max-h-0"} flex flex-col gap-2 hover:cursor-pointer`}>
+					<ul className={`overflow-hidden transition-all ${noticeListVisible ? "max-h-[200px]" : "max-h-0"} flex flex-col gap-2 hover:cursor-pointer`}>
 						{notices.slice(0, itemsToShow).map((notice) => (
 							<li key={notice.id} onClick={() => handleNoticeClick(notice)}>
 								{notice.title}
@@ -125,10 +158,10 @@ const GroupPage = () => {
 						))}
 					</ul>
 					{/* // TODO: 토글 : 최대 7, 6, 5개 -- 최소 기기별 최소 갯수 */}
-					{notices.length > itemsToShow && <button>{listVisible ? "▼" : "▲"}</button>}
+					{notices.length > itemsToShow && <button>{noticeListVisible ? "▼" : "▲"}</button>}
 				</div>
 
-				{modalVisible && (
+				{noticeModalVisible && (
 					<div className="fixed left-0 top-0 flex h-full w-full items-center justify-center">
 						<div className="flex w-4/5 flex-col gap-3 rounded-lg bg-white p-6 shadow-lg">
 							<div className="flex flex-col items-center">
@@ -160,16 +193,78 @@ const GroupPage = () => {
 							</label>
 							<div className="flex justify-end gap-4">
 								<button onClick={addNotice}>등록</button>
-								<button onClick={() => setModalVisible(false)}>취소</button>
+								<button onClick={() => setNoticeModalVisible(false)}>취소</button>
+							</div>
+						</div>
+					</div>
+				)}
+
+				{departmentModalVisible && (
+					<div className="fixed left-0 top-0 z-10 flex h-full w-full items-center justify-center bg-gray-800 bg-opacity-50">
+						<div className="flex w-4/5 flex-col gap-3 rounded-lg bg-white p-6 shadow-lg">
+							<div className="flex flex-col items-center">
+								<h2>마을 생성</h2>
+								<div className="my-2 w-full border-b border-b-black" />
+							</div>
+							<label htmlFor="name">
+								마을 이름
+								<input
+									id="name"
+									name="name"
+									type="text"
+									value={departmentInfo.name}
+									onChange={(e) => setDepartmentInfo({ ...departmentInfo, name: e.target.value })}
+									placeholder="마을 이름을 입력해주세요."
+									className="w-full rounded-2xl border p-4"
+								/>
+							</label>
+							<label htmlFor="member">
+								마을 인원 수
+								<input
+									id="member"
+									name="member"
+									type="text"
+									value={departmentInfo.member}
+									onChange={(e) => setDepartmentInfo({ ...departmentInfo, member: e.target.value })}
+									placeholder="마을 인원 수를 입력해주세요."
+									className="w-full rounded-2xl border p-4"
+								/>
+							</label>
+							<label htmlFor="tags">
+								태그
+								<input
+									id="tags"
+									name="tags"
+									type="text"
+									value={departmentInfo.tags}
+									onChange={(e) => setDepartmentInfo({ ...departmentInfo, tags: e.target.value })}
+									placeholder="태그를 입력해주세요."
+									className="w-full rounded-2xl border p-4"
+								/>
+							</label>
+							<div className="flex justify-end gap-4">
+								<button onClick={createDepartment}>생성</button>
+								<button onClick={() => setDepartmentModalVisible(false)}>취소</button>
 							</div>
 						</div>
 					</div>
 				)}
 			</header>
 			<main className="flex flex-col gap-2">
-				<button onClick={() => console.log("마을 생성")}>생성하기</button>
+				<div className="flex justify-end">
+					<button onClick={() => setDepartmentModalVisible(true)}>마을 생성</button>
+				</div>
 				{/* TODO: map으로 생성 */}
-				<div></div>
+				<div className="flex flex-wrap gap-4 border shadow-lg">
+					{departmentList.map((department) => (
+						<Link href={`/group/department/${department.id}`} key={department.id} className="flex h-[250px] w-[250px] flex-col border shadow-lg">
+							<div className="h-[150px] w-[250px]">썸네일</div>
+							<h2>{department.name}</h2>
+							<p>{department.member}</p>
+							<span>{department.tags}</span>
+						</Link>
+					))}
+				</div>
 			</main>
 			<footer className="flex flex-col gap-2">
 				<form className="flex flex-col" onSubmit={onSubmit}>
