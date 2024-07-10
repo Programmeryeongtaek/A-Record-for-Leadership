@@ -3,7 +3,13 @@
 import { supabase } from "@/utils/supabase";
 import Image from "next/image";
 import Link from "next/link";
-import { FormEvent, useEffect, useState } from "react";
+import { ChangeEvent, FormEvent, useEffect, useState } from "react";
+
+interface Notice {
+	id: number;
+	title: string;
+	content: string;
+}
 
 interface EncouragementMessage {
 	id: number;
@@ -13,10 +19,44 @@ interface EncouragementMessage {
 const GroupPage = () => {
 	const [message, setMessage] = useState<string>("");
 	const [messageList, setMessageList] = useState<EncouragementMessage[]>([]);
+	const [newNotice, setNewNotice] = useState({ title: "", content: "" });
+	const [notices, setNotices] = useState<Notice[]>([]);
+	const [modalVisible, setModalVisible] = useState(false);
+	const [selectedNotice, setSelectedNotice] = useState<Notice | null>(null);
+
+	const fetchNotice = async () => {
+		try {
+			const { data, error } = await supabase.from("Notice").select("*");
+			if (error) throw error;
+			setNotices(data || []);
+		} catch (error) {
+			console.error("공지사항을 불러오는 중 오류가 발생했습니다:", message);
+		}
+	};
+
+	useEffect(() => {
+		fetchNotice();
+	}, []);
+
+	const addNotice = async () => {
+		try {
+			const { data, error } = await supabase.from("Notice").insert([newNotice]).select("*");
+			if (error) throw error;
+			setNotices([...notices, data[0]]);
+			setNewNotice({ title: "", content: "" });
+			setModalVisible(false);
+		} catch (error) {
+			console.error("공지사항을 등록하는 중 오류가 발생했습니다:", message);
+		}
+	};
 
 	useEffect(() => {
 		fetchMessage();
 	}, []);
+
+	const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+		setNewNotice({ ...newNotice, [e.target.name]: e.target.value });
+	};
 
 	const fetchMessage = async () => {
 		try {
@@ -55,7 +95,29 @@ const GroupPage = () => {
 	return (
 		<section className="flex flex-col gap-4">
 			<header className="gpa-2 flex h-[100px] flex-col border">
-				<h1>공지사항</h1>
+				<div className="flex justify-between">
+					<h1>공지사항</h1>
+					<button onClick={() => setModalVisible(true)}>등록</button>
+				</div>
+				<div>
+					<ul>
+						{notices.map((notice) => (
+							<li key={notice.id}>{notice.title}</li>
+						))}
+					</ul>
+				</div>
+
+				{modalVisible && (
+					<div className="z-10 h-[50px] w-[50px]">
+						<h2>공지 등록</h2>
+						<label htmlFor="title">제목:</label>
+						<input id="title" name="title" type="text" value={newNotice.title} onChange={handleChange} placeholder="제목을 입력해주세요." />
+						<label htmlFor="content">내용:</label>
+						<textarea id="content" name="content" value={newNotice.content} onChange={handleChange} placeholder="내용을 입력해주세요." />
+						<button onClick={addNotice}>등록</button>
+						<button onClick={() => setModalVisible(false)}>취소</button>
+					</div>
+				)}
 			</header>
 			<main className="flex gap-2">
 				{/* TODO: map으로 생성 */}
