@@ -36,10 +36,6 @@ const GroupPage = () => {
 		}
 	};
 
-	useEffect(() => {
-		fetchNotice();
-	}, []);
-
 	const addNotice = async () => {
 		try {
 			const { data, error } = await supabase.from("Notice").insert([newNotice]).select("*");
@@ -53,6 +49,7 @@ const GroupPage = () => {
 	};
 
 	useEffect(() => {
+		fetchNotice();
 		fetchMessage();
 		handleResize();
 		window.addEventListener("resize", handleResize);
@@ -169,29 +166,10 @@ const GroupPage = () => {
 					</div>
 				)}
 			</header>
-			<main className="flex gap-2">
+			<main className="flex flex-col gap-2">
+				<button onClick={() => console.log("마을 생성")}>생성하기</button>
 				{/* TODO: map으로 생성 */}
-				<Link href="/">
-					<div className="flex h-[300px] w-[300px] flex-col gap-2 rounded-[10px] border">
-						<hr />
-						<div className="bottom-0 flex flex-col gap-1 p-1">
-							<h3>부서명</h3>
-							<span>소속멤버 이름 열거</span>
-							<span>#특징</span>
-						</div>
-					</div>
-				</Link>
-				<Link href="/">
-					<div className="h-[300px] w-[300px] rounded-[10px] border">부서명</div>
-				</Link>
-				<Link href="/">
-					{" "}
-					<div className="h-[300px] w-[300px] rounded-[10px] border">부서명</div>
-				</Link>
-				<Link href="/">
-					{" "}
-					<div className="h-[300px] w-[300px] rounded-[10px] border">부서명</div>
-				</Link>
+				<div></div>
 			</main>
 			<footer className="flex flex-col gap-2">
 				<form className="flex flex-col" onSubmit={onSubmit}>
