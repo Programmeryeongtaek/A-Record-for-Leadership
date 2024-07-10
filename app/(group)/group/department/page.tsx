@@ -114,23 +114,41 @@ const GroupPage = () => {
 					</ul>
 				</div>
 
-				{modalVisible && selectedNotice && (
-					<div>
-						<h2>{selectedNotice.title}</h2>
-						<p>{selectedNotice.content}</p>
-						<button onClick={() => setModalVisible(false)}>X</button>
-					</div>
-				)}
-
 				{modalVisible && (
-					<div className="z-10 h-[50px] w-[50px]">
-						<h2>공지 등록</h2>
-						<label htmlFor="title">제목:</label>
-						<input id="title" name="title" type="text" value={newNotice.title} onChange={handleChange} placeholder="제목을 입력해주세요." />
-						<label htmlFor="content">내용:</label>
-						<textarea id="content" name="content" value={newNotice.content} onChange={handleChange} placeholder="내용을 입력해주세요." />
-						<button onClick={addNotice}>등록</button>
-						<button onClick={() => setModalVisible(false)}>취소</button>
+					<div className="fixed left-0 top-0 flex h-full w-full items-center justify-center">
+						<div className="flex w-4/5 flex-col gap-3 rounded-lg bg-white p-6 shadow-lg">
+							<div className="flex flex-col items-center">
+								<h2>공지 등록</h2>
+								<div className="my-2 w-full border-b border-b-black" />
+							</div>
+							<label htmlFor="title">
+								제목
+								<input
+									id="title"
+									name="title"
+									type="text"
+									value={newNotice.title}
+									onChange={handleChange}
+									placeholder="제목을 입력해주세요."
+									className="w-full rounded-2xl border p-4"
+								/>
+							</label>
+							<label htmlFor="content">
+								내용
+								<textarea
+									id="content"
+									name="content"
+									value={newNotice.content}
+									onChange={handleChange}
+									placeholder="내용을 입력해주세요."
+									className="h-[300px] w-full rounded-2xl border p-4"
+								/>
+							</label>
+							<div className="flex justify-end gap-4">
+								<button onClick={addNotice}>등록</button>
+								<button onClick={() => setModalVisible(false)}>취소</button>
+							</div>
+						</div>
 					</div>
 				)}
 			</header>
