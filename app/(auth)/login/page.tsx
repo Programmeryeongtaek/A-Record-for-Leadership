@@ -13,7 +13,7 @@ const LoginPage = () => {
 		router.push("/");
 	};
 	return (
-		<main>
+		<main className="page left-slide">
 			<h2>로그인</h2>
 			<form onSubmit={handleLogin}>
 				<label htmlFor="username">
