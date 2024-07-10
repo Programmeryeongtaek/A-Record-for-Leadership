@@ -23,7 +23,6 @@ const GroupPage = () => {
 	const [notices, setNotices] = useState<Notice[]>([]);
 	const [modalVisible, setModalVisible] = useState(false);
 	const [selectedNotice, setSelectedNotice] = useState<Notice | null>(null);
-	const [editMode, setEditMode] = useState(false);
 
 	const fetchNotice = async () => {
 		try {
@@ -41,26 +40,11 @@ const GroupPage = () => {
 
 	const addNotice = async () => {
 		try {
-			if (editMode && selectedNotice) {
-				const { data, error } = await supabase.from("Notice").update({ title: newNotice.title, content: newNotice.content }).eq("id", selectedNotice.id);
-				if (error) throw error;
-				if (data) {
-					const updatedNotices = notices.map((notice) =>
-						notice.id === selectedNotice.id ? { ...notice, title: newNotice.title, content: newNotice.content } : notice,
-					);
-					setNotices(updatedNotices);
-					setEditMode(false);
-					setModalVisible(false);
-				}
-			} else {
-				const { data, error } = await supabase.from("Notice").insert([newNotice]).select("*");
-				if (error) throw error;
-				if (data) {
-					setNotices([...notices, data[0]]);
-					setNewNotice({ title: "", content: "" });
-					setModalVisible(false);
-				}
-			}
+			const { data, error } = await supabase.from("Notice").insert([newNotice]).select("*");
+			if (error) throw error;
+			setNotices([...notices, data[0]]);
+			setNewNotice({ title: "", content: "" });
+			setModalVisible(false);
 		} catch (error) {
 			console.error("공지사항을 등록하는 중 오류가 발생했습니다:", message);
 		}
@@ -88,25 +72,7 @@ const GroupPage = () => {
 
 	const handleNoticeClick = (notice: Notice) => {
 		setSelectedNotice(notice);
-		setNewNotice({ title: notice.title, content: notice.content });
-		setEditMode(true);
 		setModalVisible(true);
-	};
-
-	const handleDelete = async () => {
-		if (!window.confirm("정말로 삭제하시겠습니까?")) return;
-
-		try {
-			if (selectedNotice) {
-				const { error } = await supabase.from("Notice").delete().eq("id", selectedNotice.id);
-				if (error) throw error;
-				const updatedNotices = notices.filter((notice) => notice.id !== selectedNotice.id);
-				setNotices(updatedNotices);
-				setModalVisible(false);
-			}
-		} catch (error) {
-			console.error("공지를 삭제하는 데 오류가 발생했습니다:", message);
-		}
 	};
 
 	const onSubmit = async (e: FormEvent) => {
@@ -149,26 +115,22 @@ const GroupPage = () => {
 				</div>
 
 				{modalVisible && selectedNotice && (
+					<div>
+						<h2>{selectedNotice.title}</h2>
+						<p>{selectedNotice.content}</p>
+						<button onClick={() => setModalVisible(false)}>X</button>
+					</div>
+				)}
+
+				{modalVisible && (
 					<div className="z-10 h-[50px] w-[50px]">
-						<h2>{editMode ? "공지 수정" : "공지 상세 내용"}</h2>
+						<h2>공지 등록</h2>
 						<label htmlFor="title">제목:</label>
 						<input id="title" name="title" type="text" value={newNotice.title} onChange={handleChange} placeholder="제목을 입력해주세요." />
 						<label htmlFor="content">내용:</label>
 						<textarea id="content" name="content" value={newNotice.content} onChange={handleChange} placeholder="내용을 입력해주세요." />
-						<button onClick={addNotice}>{editMode ? "수정" : "등록"}</button>
-						{editMode && (
-							<button onClick={handleDelete} className="mr-2">
-								삭제
-							</button>
-						)}
-						<button
-							onClick={() => {
-								setEditMode(false);
-								setModalVisible(false);
-							}}
-						>
-							취소
-						</button>
+						<button onClick={addNotice}>등록</button>
+						<button onClick={() => setModalVisible(false)}>취소</button>
 					</div>
 				)}
 			</header>
