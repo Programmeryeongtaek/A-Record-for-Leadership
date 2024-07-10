@@ -114,13 +114,13 @@ const GroupPage = () => {
 
 	return (
 		<section className="flex flex-col gap-4">
-			<header className="gpa-2 flex flex-col border">
+			<header className="gpa-2 flex flex-col gap-4 border p-2">
 				<div className="flex justify-between">
 					<h1>공지사항</h1>
 					<button onClick={() => setModalVisible(true)}>등록</button>
 				</div>
-				<div>
-					<ul className={`overflow-hidden transition-all ${listVisible ? "max-h-[200px]" : "max-h-0"}`}>
+				<div className="flex flex-col">
+					<ul className={`overflow-hidden transition-all ${listVisible ? "max-h-[200px]" : "max-h-0"} flex flex-col gap-2 hover:cursor-pointer`}>
 						{notices.slice(0, itemsToShow).map((notice) => (
 							<li key={notice.id} onClick={() => handleNoticeClick(notice)}>
 								{notice.title}
@@ -194,15 +194,27 @@ const GroupPage = () => {
 				</Link>
 			</main>
 			<footer className="flex flex-col gap-2">
-				<h3>응원</h3>
-				<form className="flex" onSubmit={onSubmit}>
-					<textarea id="comment" name="comment" placeholder="응원 메시지를 남겨주세요~" value={message} onChange={(e) => setMessage(e.target.value)} />
-					<button type="submit">작성</button>
+				<form className="flex flex-col" onSubmit={onSubmit}>
+					<label htmlFor="encouragement">응원</label>
+					<textarea
+						id="encouragement"
+						name="encouragement"
+						placeholder="응원 메시지를 남겨주세요~"
+						value={message}
+						onChange={(e) => setMessage(e.target.value)}
+						className="p-4"
+					/>
+					<div className="flex justify-end">
+						<button type="submit">작성</button>
+					</div>
 				</form>
 				<div>
-					<ol className="flex gap-4">
+					{/* // TODO: swiper 또는 pagination */}
+					<ol className="flex flex-wrap gap-4">
 						{messageList.map((message, i) => (
-							<li key={i}>{message.message}</li>
+							<li key={i} className="h-[250px] w-[250px] border">
+								{message.message}
+							</li>
 						))}
 					</ol>
 				</div>
