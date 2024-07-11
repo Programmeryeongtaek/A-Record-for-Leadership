@@ -2,6 +2,7 @@
 
 import { supabase } from "@/utils/supabase";
 import CancelIcon from "@mui/icons-material/Cancel";
+import CloseIcon from "@mui/icons-material/Close";
 import { useRouter } from "next/navigation";
 import { ChangeEvent, FormEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
 
@@ -183,6 +184,9 @@ const DepartmentDetailPage = ({ params }: Props) => {
 
 						{meetingModalVisible && (
 							<div className="fixed inset-0 z-10 flex items-center justify-center bg-gray-800 bg-opacity-50">
+								<button onClick={() => setMeetingModalVisible(false)} className="absolute right-[15%] top-[15%] flex rounded-full border border-black">
+									<CloseIcon />
+								</button>
 											<h2>{departmentInfo.name} 마을</h2>
 											<label htmlFor="date">
 												날짜
