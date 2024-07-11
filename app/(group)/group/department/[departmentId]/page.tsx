@@ -52,7 +52,7 @@ const DepartmentDetailPage = ({ params }: Props) => {
 	useEffect(() => {
 		const fetchMeetingMinutes = async () => {
 			try {
-				const { data, error } = await supabase.from("MettingMinutes").select("*");
+				const { data, error } = await supabase.from("MeetingMinutes").select("*");
 				if (error) throw error;
 				setMeetingList(data || []);
 			} catch (error) {
@@ -81,7 +81,7 @@ const DepartmentDetailPage = ({ params }: Props) => {
 		e.preventDefault();
 
 		try {
-			if (!meetingContent.title || !meetingContent.date || !meetingContent.content || !meetingContent.departmentName) {
+			if (!meetingContent.title || !meetingContent.date || !meetingContent.content) {
 				throw new Error("모든 필드를 입력해야 합니다.");
 			}
 			const { error } = await supabase.from("MeetingMinutes").insert([meetingContent]);
@@ -183,14 +183,7 @@ const DepartmentDetailPage = ({ params }: Props) => {
 
 						{meetingModalVisible && (
 							<div className="fixed inset-0 z-10 flex items-center justify-center bg-gray-800 bg-opacity-50">
-								<div className="w-full rounded-lg bg-white p-4 shadow-lg">
-									<h2>회의록 작성</h2>
-									<form onSubmit={createMeeting}>
-										<div>
-											<label htmlFor="title">
-												제목
-												<input id="title" name="title" type="text" value={meetingContent.title} onChange={handleInputChange} required />
-											</label>
+											<h2>{departmentInfo.name} 마을</h2>
 											<label htmlFor="date">
 												날짜
 												<input
@@ -230,7 +223,7 @@ const DepartmentDetailPage = ({ params }: Props) => {
 									</div>
 									<div className="flex gap-2">
 										<span>{meeting.member.join(", ")}</span>
-										<span>{meeting.date.toLocaleDateString()}</span>
+										<span>{new Date(meeting.date).toLocaleDateString()}</span>
 									</div>
 								</div>
 							</li>
