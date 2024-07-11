@@ -1,8 +1,9 @@
 "use client";
 
 import { supabase } from "@/utils/supabase";
+import CancelIcon from "@mui/icons-material/Cancel";
 import { useRouter } from "next/navigation";
-import { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import { ChangeEvent, FormEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
 
 interface Props {
 	params: {
@@ -41,7 +42,12 @@ const DepartmentDetailPage = ({ params }: Props) => {
 	const [memberInput, setMemberInput] = useState<string>("");
 	const [meetingMinutesToShow, setMeetingMinutesToShow] = useState<number>(10);
 
+	const inputRef = useRef<HTMLInputElement>(null);
 	const router = useRouter();
+
+	useEffect(() => {
+		if (inputRef.current) inputRef.current.focus();
+	}, [meetingContent.member]);
 
 	useEffect(() => {
 		const fetchMeetingMinutes = async () => {
@@ -122,6 +128,7 @@ const DepartmentDetailPage = ({ params }: Props) => {
 				member: [...prev.member, memberInput.trim()],
 			}));
 			setMemberInput("");
+			if (inputRef.current) inputRef.current.focus();
 		}
 	};
 
@@ -130,6 +137,13 @@ const DepartmentDetailPage = ({ params }: Props) => {
 			...prev,
 			member: prev.member.filter((_, i) => i !== index),
 		}));
+	};
+
+	const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+		if (e.key === "Enter") {
+			e.preventDefault();
+			addMember();
+		}
 	};
 
 	useEffect(() => {
@@ -187,53 +201,19 @@ const DepartmentDetailPage = ({ params }: Props) => {
 													onChange={handleInputChange}
 													required
 												/>
-											</label>
-											<label htmlFor="content">
-												내용
-												<textarea
-													id="content"
-													name="content"
-													value={meetingContent.content}
-													onChange={handleInputChange}
-													required
-													className="w-full resize-none"
-												/>
-											</label>
-											<label htmlFor="departmentName">
-												부서명
-												<input
-													id="departmentName"
-													name="departmentName"
-													type="text"
-													value={meetingContent.departmentName}
-													onChange={handleInputChange}
-													required
-												/>
-											</label>
-											<div>
-												<label htmlFor="member">구성원 추가</label>
-												<div className="flex items-center">
-													<input id="member" type="text" value={memberInput} onChange={handleMemberInputChange} />
-													<button type="button" onClick={addMember}>
-														추가
-													</button>
-												</div>
-												<ul>
+															onKeyDown={handleKeyDown}
+															ref={inputRef}
+															className="rounded-lg p-2 focus:outline"
+												<ul className="flex flex-wrap gap-2">
 													{meetingContent.member.map((member, index) => (
-														<li key={index} className="flex items-center">
-															{member}
+														<li key={index} className="flex items-center gap-[2px]">
+															<span>{member}</span>
 															<button type="button" onClick={() => removeMember(index)}>
-																삭제
+																<CancelIcon />
 															</button>
 														</li>
 													))}
 												</ul>
-											</div>
-											<button type="button" onClick={() => setMeetingModalVisible(false)}>
-												취소
-											</button>
-											<button type="submit">저장</button>
-										</div>
 									</form>
 								</div>
 							</div>
