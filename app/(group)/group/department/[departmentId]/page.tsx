@@ -21,7 +21,7 @@ interface DepartmentInfo {
 
 interface MettingMinutes {
 	departmentName: string;
-	title: string;
+	keyword: string[];
 	member: string[];
 	content: string;
 	date: Date;
@@ -33,7 +33,7 @@ const DepartmentDetailPage = ({ params }: Props) => {
 	const [meetingModalVisible, setMeetingModalVisible] = useState(false);
 	const [meetingContent, setMeetingContent] = useState<MettingMinutes>({
 		departmentName: "",
-		title: "",
+		keyword: [],
 		member: [],
 		content: "",
 		date: new Date(),
@@ -41,14 +41,20 @@ const DepartmentDetailPage = ({ params }: Props) => {
 	const [meetingList, setMeetingList] = useState<MettingMinutes[]>([]);
 	const [meetingListVisible, setMeetingListVisible] = useState(true);
 	const [memberInput, setMemberInput] = useState<string>("");
+	const [keywordInput, setKeywordInput] = useState<string>("");
 	const [meetingMinutesToShow, setMeetingMinutesToShow] = useState<number>(10);
 
-	const inputRef = useRef<HTMLInputElement>(null);
+	const memberInputRef = useRef<HTMLInputElement>(null);
+	const keywordInputRef = useRef<HTMLInputElement>(null);
 	const router = useRouter();
 
 	useEffect(() => {
-		if (inputRef.current) inputRef.current.focus();
+		if (memberInputRef.current) memberInputRef.current.focus();
 	}, [meetingContent.member]);
+
+	useEffect(() => {
+		if (keywordInputRef.current) keywordInputRef.current.focus();
+	}, [meetingContent.keyword]);
 
 	useEffect(() => {
 		const fetchMeetingMinutes = async () => {
@@ -82,7 +88,7 @@ const DepartmentDetailPage = ({ params }: Props) => {
 		e.preventDefault();
 
 		try {
-			if (!meetingContent.title || !meetingContent.date || !meetingContent.content) {
+			if (!meetingContent.date || !meetingContent.content) {
 				throw new Error("모든 필드를 입력해야 합니다.");
 			}
 			const { error } = await supabase.from("MeetingMinutes").insert([meetingContent]);
@@ -92,7 +98,7 @@ const DepartmentDetailPage = ({ params }: Props) => {
 			setMeetingList((prev) => [...prev, meetingContent]);
 			setMeetingContent({
 				departmentName: "",
-				title: "",
+				keyword: [],
 				member: [],
 				content: "",
 				date: new Date(),
@@ -122,6 +128,10 @@ const DepartmentDetailPage = ({ params }: Props) => {
 		setMemberInput(e.target.value);
 	};
 
+	const handleKeywordInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+		setKeywordInput(e.target.value);
+	};
+
 	const addMember = () => {
 		if (memberInput.trim() !== "") {
 			setMeetingContent((prev) => ({
@@ -129,7 +139,18 @@ const DepartmentDetailPage = ({ params }: Props) => {
 				member: [...prev.member, memberInput.trim()],
 			}));
 			setMemberInput("");
-			if (inputRef.current) inputRef.current.focus();
+			if (memberInputRef.current) memberInputRef.current.focus();
+		}
+	};
+
+	const addKeyword = () => {
+		if (keywordInput.trim() !== "") {
+			setMeetingContent((prev) => ({
+				...prev,
+				keyword: [...prev.keyword, keywordInput.trim()],
+			}));
+			setKeywordInput("");
+			if (keywordInputRef.current) keywordInputRef.current.focus();
 		}
 	};
 
@@ -140,10 +161,24 @@ const DepartmentDetailPage = ({ params }: Props) => {
 		}));
 	};
 
-	const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+	const removeKeyword = (index: number) => {
+		setMeetingContent((prev) => ({
+			...prev,
+			keyword: prev.keyword.filter((_, i) => i !== index),
+		}));
+	};
+
+	const handleMember = (e: KeyboardEvent<HTMLInputElement>) => {
 		if (e.key === "Enter") {
 			e.preventDefault();
 			addMember();
+		}
+	};
+
+	const handleKeyword = (e: KeyboardEvent<HTMLInputElement>) => {
+		if (e.key === "Enter") {
+			e.preventDefault();
+			addKeyword();
 		}
 	};
 
@@ -213,8 +248,8 @@ const DepartmentDetailPage = ({ params }: Props) => {
 															type="text"
 															value={memberInput}
 															onChange={handleMemberInputChange}
-															onKeyDown={handleKeyDown}
-															ref={inputRef}
+															onKeyDown={handleMember}
+															ref={memberInputRef}
 															placeholder="이름"
 															className="rounded-lg border p-2 focus:outline"
 														/>
@@ -258,7 +293,16 @@ const DepartmentDetailPage = ({ params }: Props) => {
 												required
 												className="w-full resize-none"
 											/>
-										</label>
+											<ol className="bottom-0 flex flex-wrap">
+												{meetingContent.keyword.map((keyword, index) => (
+													<li key={index} className="flex items-center gap-[2px]">
+														<span>#{keyword}</span>
+														<button type="button" onClick={() => removeKeyword(index)} className="flex rounded-full border border-black text-[14px]">
+															<CloseIcon fontSize="inherit" />
+														</button>
+													</li>
+												))}
+											</ol>
 									</form>
 								</div>
 							</div>
