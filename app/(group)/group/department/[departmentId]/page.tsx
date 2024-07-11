@@ -39,7 +39,7 @@ const DepartmentDetailPage = ({ params }: Props) => {
 	const [meetingList, setMeetingList] = useState<MettingMinutes[]>([]);
 	const [meetingListVisible, setMeetingListVisible] = useState(true);
 	const [memberInput, setMemberInput] = useState<string>("");
-	const [meetingMinitesToShow, setMeetingMinitesToShow] = useState<number>(10);
+	const [meetingMinutesToShow, setMeetingMinutesToShow] = useState<number>(10);
 
 	const router = useRouter();
 
@@ -132,6 +132,24 @@ const DepartmentDetailPage = ({ params }: Props) => {
 		}));
 	};
 
+	useEffect(() => {
+		const handleResize = () => {
+			if (window.innerWidth >= 1200) {
+				setMeetingMinutesToShow(10);
+			} else if (window.innerWidth > 768) {
+				setMeetingMinutesToShow(8);
+			} else {
+				setMeetingMinutesToShow(5);
+			}
+		};
+
+		handleResize();
+		window.addEventListener("resize", handleResize);
+		return () => {
+			window.removeEventListener("resize", handleResize);
+		};
+	}, []);
+
 	if (!departmentInfo) {
 		return <div>Loading...</div>;
 	}
@@ -223,7 +241,7 @@ const DepartmentDetailPage = ({ params }: Props) => {
 					</div>
 					{/* //TODO: Link로 연결 + 노션처럼 소켓을 사용하기 */}
 					<ol>
-						{meetingList.map((meeting, index) => (
+						{meetingList.slice(0, meetingMinutesToShow).map((meeting, index) => (
 							<li key={index}>
 								<div>
 									<h1>{meeting.title}</h1>
