@@ -1,6 +1,7 @@
 "use client";
 
 import { supabase } from "@/utils/supabase";
+import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChangeEvent, FormEvent, useEffect, useState } from "react";
@@ -35,6 +36,7 @@ const GroupPage = () => {
 	const [noticeListVisible, setNoticeListVisible] = useState(true);
 	const [departmentList, setDepartmentList] = useState<DepartmentInfo[]>([]);
 	const [departmentInfo, setDepartmentInfo] = useState({ name: "", member: "", tags: "" });
+	const [messageCharCount, setMessageCharCount] = useState<number>(0);
 
 	const router = useRouter();
 
@@ -117,9 +119,15 @@ const GroupPage = () => {
 
 			setMessageList([...messageList, { id: data[0].id, message: message }]);
 			setMessage("");
+			setMessageCharCount(0);
 		} catch (error) {
 			alert("데이터를 저장하는 데 실패했습니다.");
 		}
+	};
+
+	const handleMessageChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
+		setMessage(e.target.value);
+		setMessageCharCount(e.target.value.length);
 	};
 
 	const handleResize = () => {
@@ -139,6 +147,20 @@ const GroupPage = () => {
 			router.push(`/group/department/${data[0].id}`);
 		} catch (error) {
 			console.error("마을을 생성하는 데 실패했습니다:", message);
+		}
+	};
+
+	const deleteMessage = async (id: number) => {
+		const confirmDelete = confirm("정말로 삭제하시겠습니까? 내용이 다시 복구되지 않습니다.");
+
+		if (!confirmDelete) return;
+
+		try {
+			const { error } = await supabase.from("EncouragementMessage").delete().eq("id", id);
+			if (error) throw error;
+			setMessageList(messageList.filter((message) => message.id !== id));
+		} catch (error) {
+			alert("메시지를 삭제하는 데 실패했습니다.");
 		}
 	};
 
@@ -274,19 +296,24 @@ const GroupPage = () => {
 						name="encouragement"
 						placeholder="응원 메시지를 남겨주세요~"
 						value={message}
-						onChange={(e) => setMessage(e.target.value)}
+						onChange={handleMessageChange}
 						className="p-4"
+						maxLength={100}
 					/>
-					<div className="flex justify-end">
+					<div className="flex justify-between">
+						<span>{messageCharCount} / 100</span>
 						<button type="submit">작성</button>
 					</div>
 				</form>
 				<div>
 					{/* // TODO: swiper 또는 pagination */}
 					<ol className="flex flex-wrap gap-4">
-						{messageList.map((message, i) => (
-							<li key={i} className="h-[250px] w-[250px] border">
+						{messageList.map((message) => (
+							<li key={message.id} className="overflow relative h-[250px] w-[250px] overflow-hidden border p-6 leading-6">
 								{message.message}
+								<button onClick={() => deleteMessage(message.id)} className="absolute right-[1%] top-[1%]">
+									<DeleteForeverIcon />
+								</button>
 							</li>
 						))}
 					</ol>
