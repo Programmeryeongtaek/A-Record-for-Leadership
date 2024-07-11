@@ -259,7 +259,7 @@ const DepartmentDetailPage = ({ params }: Props) => {
 															<li key={index} className="flex items-center gap-[2px]">
 																<span>{member}</span>
 																<button type="button" onClick={() => removeMember(index)} className="flex">
-																	<CancelIcon />
+																	<CancelIcon fontSize="small" />
 																</button>
 															</li>
 														))}
@@ -268,30 +268,36 @@ const DepartmentDetailPage = ({ params }: Props) => {
 											</div>
 										</div>
 										<div className="my-2 border" />
-										<div className="flex justify-between">
-											<div className="flex gap-2">
-												<label htmlFor="title" className="flex flex-col">
-													키워드
-												</label>
-												<input id="title" name="title" type="text" value={meetingContent.title} onChange={handleInputChange} required />
+										<div className="flex flex-col">
+											<div className="flex justify-between">
+												<label htmlFor="content">내용</label>
+												<div className="flex justify-end gap-2">
+													<button type="button" onClick={() => setMeetingModalVisible(false)}>
+														취소
+													</button>
+													<button type="submit">저장</button>
+												</div>
 											</div>
-											<div className="flex justify-end gap-2">
-												<button type="button" onClick={() => setMeetingModalVisible(false)}>
-													취소
-												</button>
-												<button type="submit">저장</button>
-											</div>
-										</div>
-										{/* //TODO: 마크다운 형태로 변경 */}
-										<label htmlFor="content">
-											내용
 											<textarea
 												id="content"
 												name="content"
 												value={meetingContent.content}
 												onChange={handleInputChange}
 												required
-												className="w-full resize-none"
+												className="h-64 w-full resize-none"
+											/>
+										</div>
+										{/* //TODO: 마크다운 형태로 변경 */}
+										<div className="my-2 border" />
+										<div className="flex">
+											<input
+												type="text"
+												value={keywordInput}
+												onChange={handleKeywordInputChange}
+												onKeyDown={handleKeyword}
+												ref={keywordInputRef}
+												placeholder="키워드"
+												className="h-6 w-20 rounded-lg border p-2 focus:outline"
 											/>
 											<ol className="bottom-0 flex flex-wrap">
 												{meetingContent.keyword.map((keyword, index) => (
@@ -303,6 +309,7 @@ const DepartmentDetailPage = ({ params }: Props) => {
 													</li>
 												))}
 											</ol>
+										</div>
 									</form>
 								</div>
 							</div>
@@ -315,12 +322,12 @@ const DepartmentDetailPage = ({ params }: Props) => {
 							<li key={index}>
 								<div className="flex justify-between">
 									<div className="flex gap-2">
-										<span>[{meeting.departmentName}]</span>
-										<span>{meeting.title}</span>
+										<span>[{departmentInfo.name}]</span>
+										<span>{meeting.keyword.join(", ")}</span>
 									</div>
 									<div className="flex gap-2">
 										<span>{meeting.member.join(", ")}</span>
-										<span>{new Date(meeting.date).toLocaleDateString()}</span>
+										<span>| {new Date(meeting.date).toLocaleDateString()}</span>
 									</div>
 								</div>
 							</li>
