@@ -164,6 +164,22 @@ const GroupPage = () => {
 		}
 	};
 
+	const deleteDepartment = async (id: number) => {
+		const confirmDelete = confirm("정말로 삭제하시겠습니까? 내용이 다시 복구되지 않습니다.");
+
+		if (!confirmDelete) return;
+
+		try {
+			const { error } = await supabase.from("Department").delete().eq("id", id);
+			if (error) throw error;
+			// TODO: 콘솔로그에 406 error가 발생한다. 이를 해결해야 한다.
+			setDepartmentList(departmentList.filter((department) => department.id !== id));
+			router.push("/group/department");
+		} catch (error) {
+			alert("마을 정보를 삭제하는 데 싪패했습니다.");
+		}
+	};
+
 	return (
 		<section className="flex flex-col gap-4">
 			<header className="gpa-2 flex flex-col gap-4 border p-2">
@@ -279,8 +295,13 @@ const GroupPage = () => {
 				{/* TODO: map으로 생성 */}
 				<div className="flex flex-wrap gap-4 border shadow-lg">
 					{departmentList.map((department) => (
-						<Link href={`/group/department/${department.id}`} key={department.id} className="flex h-[250px] w-[250px] flex-col border shadow-lg">
-							<div className="h-[150px] w-[250px]">썸네일</div>
+						<Link href={`/group/department/${department.id}`} key={department.id} className="h-[250px] w-[250px] flex-col border shadow-lg">
+							<div className="relative flex h-[150px] w-[250px]">
+								썸네일
+								<button onClick={() => deleteDepartment(department.id)} className="absolute right-[1%] top-[1%] z-0">
+									<DeleteForeverIcon />
+								</button>
+							</div>
 							<h2>{department.name}</h2>
 							<p>{department.member}</p>
 							<span>{department.tags}</span>
