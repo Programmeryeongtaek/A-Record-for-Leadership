@@ -178,18 +178,23 @@ const DepartmentDetailPage = ({ params }: Props) => {
 			</header>
 			<main className="flex flex-col">
 				<div>
-					<div className="flex justify-between">
+					<div className="my-2 border" />
+					<div className="my-2 flex justify-between">
 						<h2>가족 현황 및 회의</h2>
-						<button onClick={() => setMeetingModalVisible(true)}>생성</button>
+						<button onClick={() => setMeetingModalVisible(true)}>새로 만들기</button>
 
 						{meetingModalVisible && (
 							<div className="fixed inset-0 z-10 flex items-center justify-center bg-gray-800 bg-opacity-50">
 								<button onClick={() => setMeetingModalVisible(false)} className="absolute right-[15%] top-[15%] flex rounded-full border border-black">
 									<CloseIcon />
 								</button>
+								<div className="flex h-4/5 w-4/5 flex-col items-center gap-4 rounded-lg bg-white p-10 shadow-lg">
+									<h1>회의록 작성</h1>
+									<form onSubmit={createMeeting} className="flex w-11/12 flex-col px-20">
+										<div className="flex flex-col">
 											<h2>{departmentInfo.name} 마을</h2>
 											<label htmlFor="date">
-												날짜
+												미팅 일시
 												<input
 													id="date"
 													name="date"
@@ -198,24 +203,68 @@ const DepartmentDetailPage = ({ params }: Props) => {
 													onChange={handleInputChange}
 													required
 												/>
+											</label>
+											<div className="flex justify-between gap-20">
+												<div className="flex gap-4">
+													<div className="flex w-1/2 flex-col">
+														<label htmlFor="member">구성원 : {meetingContent.member.length}명</label>
+														<input
+															id="member"
+															type="text"
+															value={memberInput}
+															onChange={handleMemberInputChange}
 															onKeyDown={handleKeyDown}
 															ref={inputRef}
-															className="rounded-lg p-2 focus:outline"
-												<ul className="flex flex-wrap gap-2">
-													{meetingContent.member.map((member, index) => (
-														<li key={index} className="flex items-center gap-[2px]">
-															<span>{member}</span>
-															<button type="button" onClick={() => removeMember(index)}>
-																<CancelIcon />
-															</button>
-														</li>
-													))}
-												</ul>
+															placeholder="이름"
+															className="rounded-lg border p-2 focus:outline"
+														/>
+													</div>
+													<ol className="flex flex-wrap gap-2">
+														{meetingContent.member.map((member, index) => (
+															<li key={index} className="flex items-center gap-[2px]">
+																<span>{member}</span>
+																<button type="button" onClick={() => removeMember(index)} className="flex">
+																	<CancelIcon />
+																</button>
+															</li>
+														))}
+													</ol>
+												</div>
+											</div>
+										</div>
+										<div className="my-2 border" />
+										<div className="flex justify-between">
+											<div className="flex gap-2">
+												<label htmlFor="title" className="flex flex-col">
+													키워드
+												</label>
+												<input id="title" name="title" type="text" value={meetingContent.title} onChange={handleInputChange} required />
+											</div>
+											<div className="flex justify-end gap-2">
+												<button type="button" onClick={() => setMeetingModalVisible(false)}>
+													취소
+												</button>
+												<button type="submit">저장</button>
+											</div>
+										</div>
+										{/* //TODO: 마크다운 형태로 변경 */}
+										<label htmlFor="content">
+											내용
+											<textarea
+												id="content"
+												name="content"
+												value={meetingContent.content}
+												onChange={handleInputChange}
+												required
+												className="w-full resize-none"
+											/>
+										</label>
 									</form>
 								</div>
 							</div>
 						)}
 					</div>
+					<div className="my-2 border" />
 					{/* //TODO: Link로 연결 + 노션처럼 소켓을 사용하기 */}
 					<ol>
 						{meetingList.slice(0, meetingMinutesToShow).map((meeting, index) => (
