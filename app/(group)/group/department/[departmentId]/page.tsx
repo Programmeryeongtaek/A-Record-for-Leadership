@@ -243,13 +243,16 @@ const DepartmentDetailPage = ({ params }: Props) => {
 					<ol>
 						{meetingList.slice(0, meetingMinutesToShow).map((meeting, index) => (
 							<li key={index}>
-								<div>
-									<h1>{meeting.title}</h1>
-									<h2>{meeting.date.toLocaleDateString()}</h2>
+								<div className="flex justify-between">
+									<div className="flex gap-2">
+										<span>[{meeting.departmentName}]</span>
+										<span>{meeting.title}</span>
+									</div>
+									<div className="flex gap-2">
+										<span>{meeting.member.join(", ")}</span>
+										<span>{meeting.date.toLocaleDateString()}</span>
+									</div>
 								</div>
-								<p>{meeting.departmentName}</p>
-								<p>{meeting.content}</p>
-								<p>{meeting.member.join(", ")}</p>
 							</li>
 						))}
 					</ol>
