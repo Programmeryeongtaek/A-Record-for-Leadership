@@ -1,15 +1,18 @@
 "use client";
 
 import { supabase } from "@/utils/supabase";
+import CloseIcon from "@mui/icons-material/Close";
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import { ChangeEvent, FormEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
 
 interface Notice {
 	id: number;
 	title: string;
 	content: string;
+	keyword: string[];
+	date: Date;
 }
 
 interface EncouragementMessage {
@@ -27,7 +30,7 @@ interface DepartmentInfo {
 const GroupPage = () => {
 	const [message, setMessage] = useState<string>("");
 	const [messageList, setMessageList] = useState<EncouragementMessage[]>([]);
-	const [newNotice, setNewNotice] = useState({ title: "", content: "" });
+	const [newNotice, setNewNotice] = useState<Notice>({ id: 0, title: "", content: "", keyword: [], date: new Date() });
 	const [notices, setNotices] = useState<Notice[]>([]);
 	const [noticeModalVisible, setNoticeModalVisible] = useState(false);
 	const [departmentModalVisible, setDepartmentModalVisible] = useState(false);
@@ -38,8 +41,14 @@ const GroupPage = () => {
 	const [departmentInfo, setDepartmentInfo] = useState({ name: "", member: "", tags: "" });
 	const [messageCharCount, setMessageCharCount] = useState<number>(0);
 	const [currentMessageIndex, setCurrentMessageIndex] = useState<number>(0);
+	const [keywordInput, setKeywordInput] = useState<string>("");
 
 	const router = useRouter();
+	const keywordInputRef = useRef<HTMLInputElement>(null);
+
+	useEffect(() => {
+		if (keywordInputRef.current) keywordInputRef.current.focus();
+	}, [newNotice.keyword]);
 
 	const fetchNotice = async () => {
 		try {
@@ -56,10 +65,39 @@ const GroupPage = () => {
 			const { data, error } = await supabase.from("Notice").insert([newNotice]).select("*");
 			if (error) throw error;
 			setNotices([...notices, data[0]]);
-			setNewNotice({ title: "", content: "" });
+			setNewNotice({ id: 0, title: "", content: "", keyword: [], date: new Date() });
 			setNoticeModalVisible(false);
 		} catch (error) {
 			console.error("공지사항을 등록하는 중 오류가 발생했습니다:", message);
+		}
+	};
+
+	const handleKeywordInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+		setKeywordInput(e.target.value);
+	};
+
+	const addKeyword = () => {
+		if (keywordInput.trim() !== "") {
+			setNewNotice((prev) => ({
+				...prev,
+				keyword: [...prev.keyword, keywordInput.trim()],
+			}));
+			setKeywordInput("");
+			if (keywordInputRef.current) keywordInputRef.current.focus();
+		}
+	};
+
+	const removeKeyword = (index: number) => {
+		setNewNotice((prev) => ({
+			...prev,
+			keyword: prev.keyword.filter((_, i) => i !== index),
+		}));
+	};
+
+	const handleKeyword = (e: KeyboardEvent<HTMLInputElement>) => {
+		if (e.key === "Enter") {
+			e.preventDefault();
+			addKeyword();
 		}
 	};
 
@@ -230,18 +268,35 @@ const GroupPage = () => {
 								<h2>공지 등록</h2>
 								<div className="my-2 w-full border-b border-b-black" />
 							</div>
-							<label htmlFor="title">
-								제목
-								<input
-									id="title"
-									name="title"
-									type="text"
-									value={newNotice.title}
-									onChange={handleChange}
-									placeholder="제목을 입력해주세요."
-									className="w-full rounded-2xl border p-4"
-								/>
-							</label>
+									<label htmlFor="keyword" className="flex items-center justify-between gap-3">
+										키워드
+										<input
+											id="keyword"
+											type="text"
+											value={keywordInput}
+											onChange={handleKeywordInputChange}
+											onKeyDown={handleKeyword}
+											ref={keywordInputRef}
+											placeholder="키워드"
+											className="w-[300px] rounded-2xl border p-4"
+										/>
+									</label>
+								</div>
+								<label htmlFor="">
+									모임 일시
+									<input type="text" />
+								</label>
+							</div>
+							<ol className="flex flex-wrap gap-2">
+								{newNotice.keyword.map((keyword, index) => (
+									<li key={index} className="flex items-center gap-[2px]">
+										<span>#{keyword}</span>
+										<button type="button" onClick={() => removeKeyword(index)} className="flex rounded-full border border-black text-[14px]">
+											<CloseIcon fontSize="inherit" />
+										</button>
+									</li>
+								))}
+							</ol>
 							<label htmlFor="content">
 								내용
 								<textarea
