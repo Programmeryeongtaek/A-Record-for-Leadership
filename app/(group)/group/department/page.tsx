@@ -494,7 +494,13 @@ const GroupPage = () => {
 						<Link href={`/group/department/${department.id}`} key={department.id} className="h-[250px] w-[250px] flex-col rounded-lg border shadow-lg">
 							<div className="relative flex h-[150px] w-[250px]">
 								썸네일
-								<button onClick={() => deleteDepartment(department.id)} className="absolute right-[1%] top-[1%] z-0">
+								<button
+									onClick={(e) => {
+										e.preventDefault();
+										deleteDepartment(department.id);
+									}}
+									className="absolute right-[1%] top-[1%] z-0"
+								>
 									<DeleteForeverIcon />
 								</button>
 							</div>
