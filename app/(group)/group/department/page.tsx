@@ -8,7 +8,6 @@ import { useRouter } from "next/navigation";
 import { ChangeEvent, FormEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
 
 interface Notice {
-	id: number;
 	title: string;
 	content: string;
 	keyword: string[];
@@ -30,7 +29,7 @@ interface DepartmentInfo {
 const GroupPage = () => {
 	const [message, setMessage] = useState<string>("");
 	const [messageList, setMessageList] = useState<EncouragementMessage[]>([]);
-	const [newNotice, setNewNotice] = useState<Notice>({ id: 0, title: "", content: "", keyword: [], date: new Date() });
+	const [newNotice, setNewNotice] = useState<Notice>({ title: "", content: "", keyword: [], date: new Date() });
 	const [notices, setNotices] = useState<Notice[]>([]);
 	const [noticeModalVisible, setNoticeModalVisible] = useState(false);
 	const [departmentModalVisible, setDepartmentModalVisible] = useState(false);
@@ -60,16 +59,24 @@ const GroupPage = () => {
 		}
 	};
 
-	const addNotice = async () => {
+	const addNotice = async (e: FormEvent) => {
+		e.preventDefault();
+
 		try {
-			const { data, error } = await supabase.from("Notice").insert([newNotice]).select("*");
+			const { error } = await supabase.from("Notice").insert([newNotice]);
 			if (error) throw error;
-			setNotices([...notices, data[0]]);
-			setNewNotice({ id: 0, title: "", content: "", keyword: [], date: new Date() });
+
 			setNoticeModalVisible(false);
+			setNotices((prev) => [...prev, newNotice]);
+			setNewNotice({ title: "", content: "", keyword: [], date: new Date() });
 		} catch (error) {
 			console.error("공지사항을 등록하는 중 오류가 발생했습니다:", message);
 		}
+	};
+
+	const cancelNotice = () => {
+		setNoticeModalVisible(false);
+		setNewNotice({ title: "", content: "", keyword: [], date: new Date() });
 	};
 
 	const handleKeywordInputChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -120,8 +127,19 @@ const GroupPage = () => {
 		return () => window.removeEventListener("resize", handleResize);
 	}, []);
 
-	const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-		setNewNotice({ ...newNotice, [e.target.name]: e.target.value });
+	const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+		const { name, value } = e.target;
+		if (name === "date") {
+			setNewNotice((prev) => ({
+				...prev,
+				[name]: new Date(value),
+			}));
+		} else {
+			setNewNotice((prev) => ({
+				...prev,
+				[name]: value,
+			}));
+		}
 	};
 
 	const fetchMessage = async () => {
@@ -244,15 +262,15 @@ const GroupPage = () => {
 				</div>
 				<div className="flex flex-col">
 					<ul className={`overflow-hidden transition-all ${noticeListVisible ? "max-h-[200px]" : "max-h-0"} flex flex-col gap-2 hover:cursor-pointer`}>
-						{notices.slice(0, itemsToShow).map((notice) => (
-							<li key={notice.id} onClick={() => handleNoticeClick(notice)} className="flex justify-between">
-								<div className="flex items-center">
-									<p>{notice.id}。</p>
+						{notices.slice(0, itemsToShow).map((notice, index) => (
+							<li key={index} onClick={() => handleNoticeClick(notice)} className="flex justify-between">
+								<div className="flex">
+									<p>{index + 1}。</p>
 									<p>{notice.title}</p>
 								</div>
 								<div className="flex gap-2">
-									<p>키워드 | </p>
-									<p>작성일</p>
+									<p>{notice.keyword.join(", ")}</p>
+									<p>| {new Date(notice.date).toLocaleDateString()}</p>
 								</div>
 							</li>
 						))}
@@ -268,50 +286,81 @@ const GroupPage = () => {
 								<h2>공지 등록</h2>
 								<div className="my-2 w-full border-b border-b-black" />
 							</div>
-									<label htmlFor="keyword" className="flex items-center justify-between gap-3">
-										키워드
-										<input
-											id="keyword"
-											type="text"
-											value={keywordInput}
-											onChange={handleKeywordInputChange}
-											onKeyDown={handleKeyword}
-											ref={keywordInputRef}
-											placeholder="키워드"
-											className="w-[300px] rounded-2xl border p-4"
-										/>
-									</label>
+							<form onSubmit={addNotice} className="flex w-full flex-col justify-between gap-4">
+								<div className="flex justify-between">
+									<div className="flex flex-col gap-4">
+										<label htmlFor="title" className="flex items-center justify-between gap-3">
+											제목
+											<input
+												id="title"
+												name="title"
+												type="text"
+												value={newNotice.title}
+												onChange={handleInputChange}
+												placeholder="제목을 입력해주세요."
+												className="w-[300px] rounded-2xl border p-4"
+											/>
+										</label>
+										<label htmlFor="keyword" className="flex items-center justify-between gap-3">
+											키워드
+											<input
+												id="keyword"
+												type="text"
+												value={keywordInput}
+												onChange={handleKeywordInputChange}
+												onKeyDown={handleKeyword}
+												ref={keywordInputRef}
+												placeholder="키워드"
+												className="w-[300px] rounded-2xl border p-4"
+											/>
+										</label>
+									</div>
+									<div>
+										<label htmlFor="date" className="flex items-center gap-4">
+											모임 일시
+											<input
+												id="date"
+												name="date"
+												type="date"
+												value={newNotice.date.toISOString().split("T")[0]}
+												onChange={handleInputChange}
+												required
+												className="rounded-2xl p-4"
+											/>
+										</label>
+									</div>
 								</div>
-								<label htmlFor="">
-									모임 일시
-									<input type="text" />
+								<ol className="flex flex-wrap gap-2">
+									{newNotice.keyword.map((keyword, index) => (
+										<li key={index} className="flex items-center gap-[2px]">
+											<span>#{keyword}</span>
+											<button type="button" onClick={() => removeKeyword(index)} className="flex rounded-full border border-black text-[14px]">
+												<CloseIcon fontSize="inherit" />
+											</button>
+										</li>
+									))}
+								</ol>
+
+								<label htmlFor="content">
+									내용
+									<textarea
+										id="content"
+										name="content"
+										value={newNotice.content}
+										onChange={handleInputChange}
+										placeholder="내용을 입력해주세요."
+										className="h-[300px] w-full rounded-2xl border p-4"
+									/>
 								</label>
-							</div>
-							<ol className="flex flex-wrap gap-2">
-								{newNotice.keyword.map((keyword, index) => (
-									<li key={index} className="flex items-center gap-[2px]">
-										<span>#{keyword}</span>
-										<button type="button" onClick={() => removeKeyword(index)} className="flex rounded-full border border-black text-[14px]">
-											<CloseIcon fontSize="inherit" />
-										</button>
-									</li>
-								))}
-							</ol>
-							<label htmlFor="content">
-								내용
-								<textarea
-									id="content"
-									name="content"
-									value={newNotice.content}
-									onChange={handleChange}
-									placeholder="내용을 입력해주세요."
-									className="h-[300px] w-full rounded-2xl border p-4"
-								/>
-							</label>
-							<div className="flex justify-end gap-4">
-								<button onClick={addNotice}>등록</button>
-								<button onClick={() => setNoticeModalVisible(false)}>취소</button>
-							</div>
+								<div className="flex justify-end gap-4">
+									<button type="reset" onClick={cancelNotice}>
+										취소
+									</button>
+									<button type="submit" onClick={addNotice}>
+										등록
+									</button>
+								</div>
+							</form>
 						</div>
 					</div>
 				)}
