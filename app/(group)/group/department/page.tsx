@@ -134,7 +134,7 @@ const GroupPage = () => {
 	const handleResize = () => {
 		if (window.innerWidth >= 1200) {
 			setItemsToShow(5);
-		} else if (window.innerWidth > 768) {
+		} else if (window.innerWidth >= 768) {
 			setItemsToShow(4);
 		} else {
 			setItemsToShow(3);
@@ -207,8 +207,15 @@ const GroupPage = () => {
 				<div className="flex flex-col">
 					<ul className={`overflow-hidden transition-all ${noticeListVisible ? "max-h-[200px]" : "max-h-0"} flex flex-col gap-2 hover:cursor-pointer`}>
 						{notices.slice(0, itemsToShow).map((notice) => (
-							<li key={notice.id} onClick={() => handleNoticeClick(notice)}>
-								{notice.title}
+							<li key={notice.id} onClick={() => handleNoticeClick(notice)} className="flex justify-between">
+								<div className="flex items-center">
+									<p>{notice.id}。</p>
+									<p>{notice.title}</p>
+								</div>
+								<div className="flex gap-2">
+									<p>키워드 | </p>
+									<p>작성일</p>
+								</div>
 							</li>
 						))}
 					</ul>
@@ -217,7 +224,7 @@ const GroupPage = () => {
 				</div>
 
 				{noticeModalVisible && (
-					<div className="fixed left-0 top-0 z-10 flex h-full w-full items-center justify-center">
+					<div className="fixed left-0 top-0 z-10 flex h-full w-full items-center justify-center bg-slate-400 bg-opacity-50">
 						<div className="flex w-4/5 flex-col gap-3 rounded-lg bg-white p-6 shadow-lg">
 							<div className="flex flex-col items-center">
 								<h2>공지 등록</h2>
@@ -310,9 +317,9 @@ const GroupPage = () => {
 					<button onClick={() => setDepartmentModalVisible(true)}>마을 생성</button>
 				</div>
 				{/* TODO: map으로 생성 */}
-				<div className="flex flex-wrap gap-4 border shadow-lg">
+				<div className="flex flex-wrap gap-4">
 					{departmentList.map((department) => (
-						<Link href={`/group/department/${department.id}`} key={department.id} className="h-[250px] w-[250px] flex-col border shadow-lg">
+						<Link href={`/group/department/${department.id}`} key={department.id} className="h-[250px] w-[250px] flex-col rounded-lg border shadow-lg">
 							<div className="relative flex h-[150px] w-[250px]">
 								썸네일
 								<button onClick={() => deleteDepartment(department.id)} className="absolute right-[1%] top-[1%] z-0">
@@ -338,7 +345,7 @@ const GroupPage = () => {
 						className="p-4"
 						maxLength={100}
 					/>
-					<div className="flex justify-between">
+					<div className="mt-2 flex justify-between">
 						<span>{messageCharCount} / 100</span>
 						<button type="submit">작성</button>
 					</div>
