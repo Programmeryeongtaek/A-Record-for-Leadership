@@ -37,6 +37,7 @@ const GroupPage = () => {
 	const [departmentList, setDepartmentList] = useState<DepartmentInfo[]>([]);
 	const [departmentInfo, setDepartmentInfo] = useState({ name: "", member: "", tags: "" });
 	const [messageCharCount, setMessageCharCount] = useState<number>(0);
+	const [currentMessageIndex, setCurrentMessageIndex] = useState<number>(0);
 
 	const router = useRouter();
 
@@ -180,6 +181,22 @@ const GroupPage = () => {
 		}
 	};
 
+	const previousMessage = () => {
+		setCurrentMessageIndex((prevIndex) => (prevIndex === 0 ? messageList.length - 1 : prevIndex - 1));
+	};
+
+	const nextMessage = () => {
+		setCurrentMessageIndex((prevIndex) => (prevIndex === messageList.length - 1 ? 0 : prevIndex + 1));
+	};
+
+	useEffect(() => {
+		const interval = setInterval(() => {
+			nextMessage();
+		}, 5000);
+
+		return () => clearInterval(interval);
+	}, [messageList, currentMessageIndex]);
+
 	return (
 		<section className="flex flex-col gap-4">
 			<header className="gpa-2 flex flex-col gap-4 border p-2">
@@ -200,7 +217,7 @@ const GroupPage = () => {
 				</div>
 
 				{noticeModalVisible && (
-					<div className="fixed left-0 top-0 flex h-full w-full items-center justify-center">
+					<div className="fixed left-0 top-0 z-10 flex h-full w-full items-center justify-center">
 						<div className="flex w-4/5 flex-col gap-3 rounded-lg bg-white p-6 shadow-lg">
 							<div className="flex flex-col items-center">
 								<h2>공지 등록</h2>
@@ -328,16 +345,18 @@ const GroupPage = () => {
 				</form>
 				<div>
 					{/* // TODO: swiper 또는 pagination */}
-					<ol className="flex flex-wrap gap-4">
-						{messageList.map((message) => (
-							<li key={message.id} className="overflow relative h-[250px] w-[250px] overflow-hidden border p-6 leading-6">
-								{message.message}
-								<button onClick={() => deleteMessage(message.id)} className="absolute right-[1%] top-[1%]">
+					{messageList.length > 0 && (
+						<div>
+							<button onClick={previousMessage}>이전</button>
+							<div className="overflow relative h-[250px] w-[250px] overflow-hidden border p-6 leading-6">
+								{messageList.length > 0 && <p key={messageList[currentMessageIndex].id}>{messageList[currentMessageIndex].message}</p>}
+								<button onClick={() => deleteMessage(messageList[currentMessageIndex].id)} className="absolute right-[1%] top-[1%]">
 									<DeleteForeverIcon />
 								</button>
-							</li>
-						))}
-					</ol>
+							</div>
+							<button onClick={nextMessage}>다음</button>
+						</div>
+					)}
 				</div>
 			</footer>
 		</section>
