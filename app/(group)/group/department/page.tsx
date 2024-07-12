@@ -32,6 +32,7 @@ const GroupPage = () => {
 	const [newNotice, setNewNotice] = useState<Notice>({ title: "", content: "", keyword: [], date: new Date() });
 	const [notices, setNotices] = useState<Notice[]>([]);
 	const [noticeModalVisible, setNoticeModalVisible] = useState(false);
+	const [selectedNoticeModalVisible, setSelectedNoticeModalVisible] = useState(false);
 	const [departmentModalVisible, setDepartmentModalVisible] = useState(false);
 	const [selectedNotice, setSelectedNotice] = useState<Notice | null>(null);
 	const [itemsToShow, setItemsToShow] = useState(5);
@@ -156,7 +157,7 @@ const GroupPage = () => {
 
 	const handleNoticeClick = (notice: Notice) => {
 		setSelectedNotice(notice);
-		setNoticeModalVisible(true);
+		setSelectedNoticeModalVisible(true);
 	};
 
 	const onSubmit = async (e: FormEvent) => {
@@ -361,6 +362,48 @@ const GroupPage = () => {
 									</button>
 								</div>
 							</form>
+						</div>
+					</div>
+				)}
+
+				{selectedNoticeModalVisible && (
+					<div className="fixed left-0 top-0 z-10 flex h-full w-full items-center justify-center bg-slate-400 bg-opacity-50">
+						<div className="relative flex w-[1000px] flex-col gap-3 rounded-lg bg-white p-6 shadow-lg">
+							<div className="flex flex-col items-center">
+								<h2>공지사항 상세보기</h2>
+								<div className="my-2 w-full border-b border-b-black" />
+								<button
+									type="button"
+									onClick={() => setSelectedNoticeModalVisible(false)}
+									className="absolute right-[7px] top-[7px] flex rounded-full border border-black"
+								>
+									<CloseIcon />
+								</button>
+							</div>
+							<div className="flex w-full flex-col justify-between gap-4">
+								<div className="flex flex-col gap-4">
+									<div className="flex justify-between">
+										<h3>제목 | {selectedNotice?.title}</h3>
+										<div className="flex gap-4">
+											<button type="button" onClick={() => console.log("공지사항 수정")}>
+												수정하기
+											</button>
+											<button type="button" onClick={() => console.log("공지사항 삭제")}>
+												삭제하기
+											</button>
+										</div>
+									</div>
+									<p>키워드 | #{selectedNotice?.keyword.join(" #")}</p>
+									<p className="absolute right-6 top-8 flex items-center gap-2">
+										{newNotice.date.toISOString().replace("T", " ").split(":").slice(0, 2).join(":")}
+									</p>
+								</div>
+
+								<div className="flex flex-col gap-1">
+									<p>내용</p>
+									<span className="h-[500px] rounded-lg border p-2">{selectedNotice?.content}</span>
+								</div>
+							</div>
 						</div>
 					</div>
 				)}
