@@ -208,17 +208,20 @@ const GroupPage = () => {
 		}
 	};
 
-	const deleteMessage = async (id: number) => {
+	const deleteNotice = async (title: string, content: string) => {
 		const confirmDelete = confirm("정말로 삭제하시겠습니까? 내용이 다시 복구되지 않습니다.");
 
 		if (!confirmDelete) return;
 
 		try {
-			const { error } = await supabase.from("EncouragementMessage").delete().eq("id", id);
+			const { error } = await supabase.from("Notice").delete().match({ title, content });
 			if (error) throw error;
-			setMessageList(messageList.filter((message) => message.id !== id));
+
+			setNotices(notices.filter((notice) => notice.title !== title || notice.content !== content));
+			setSelectedNoticeModalVisible(false);
+			router.push("/group/department");
 		} catch (error) {
-			alert("메시지를 삭제하는 데 실패했습니다.");
+			alert("공지사항 삭제하는 데 싪패했습니다.");
 		}
 	};
 
@@ -235,6 +238,20 @@ const GroupPage = () => {
 			router.push("/group/department");
 		} catch (error) {
 			alert("마을 정보를 삭제하는 데 싪패했습니다.");
+		}
+	};
+
+	const deleteMessage = async (id: number) => {
+		const confirmDelete = confirm("정말로 삭제하시겠습니까? 내용이 다시 복구되지 않습니다.");
+
+		if (!confirmDelete) return;
+
+		try {
+			const { error } = await supabase.from("EncouragementMessage").delete().eq("id", id);
+			if (error) throw error;
+			setMessageList(messageList.filter((message) => message.id !== id));
+		} catch (error) {
+			alert("메시지를 삭제하는 데 실패했습니다.");
 		}
 	};
 
@@ -256,7 +273,7 @@ const GroupPage = () => {
 
 	return (
 		<section className="flex flex-col gap-4">
-			<header className="gpa-2 flex flex-col gap-4 border p-2">
+			<header className="gpa-2 flex flex-col gap-4 p-2">
 				<div className="flex justify-between">
 					<h1>공지사항</h1>
 					<button onClick={() => setNoticeModalVisible(true)}>등록</button>
@@ -388,7 +405,15 @@ const GroupPage = () => {
 											<button type="button" onClick={() => console.log("공지사항 수정")}>
 												수정하기
 											</button>
-											<button type="button" onClick={() => console.log("공지사항 삭제")}>
+											{/* // TODO: code가 지저분하므로 리팩토링 방법 찾기 */}
+											<button
+												type="button"
+												onClick={() => {
+													if (selectedNotice?.title && selectedNotice?.content) {
+														deleteNotice(selectedNotice.title, selectedNotice.content);
+													}
+												}}
+											>
 												삭제하기
 											</button>
 										</div>
