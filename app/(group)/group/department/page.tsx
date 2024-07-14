@@ -8,11 +8,14 @@ import { useRouter } from "next/navigation";
 import { ChangeEvent, FormEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
 
 interface Notice {
+	id: number;
 	title: string;
 	content: string;
 	keyword: string[];
 	date: Date;
 }
+
+type NoticeCreatePayload = Omit<Notice, "id">;
 
 interface EncouragementMessage {
 	id: number;
@@ -26,11 +29,13 @@ interface DepartmentInfo {
 	tags: string[];
 }
 
+type DepartmentInfoCreatePayload = Omit<DepartmentInfo, "id">;
+
 const GroupPage = () => {
 	const [message, setMessage] = useState<string>("");
 	const [messageList, setMessageList] = useState<EncouragementMessage[]>([]);
-	const [newNotice, setNewNotice] = useState<Notice>({ title: "", content: "", keyword: [], date: new Date() });
-	const [notices, setNotices] = useState<Notice[]>([]);
+	const [newNotice, setNewNotice] = useState<NoticeCreatePayload>({ title: "", content: "", keyword: [], date: new Date() });
+	const [noticeList, setNoticeList] = useState<Notice[]>([]);
 	const [noticeModalVisible, setNoticeModalVisible] = useState(false);
 	const [selectedNoticeModalVisible, setSelectedNoticeModalVisible] = useState(false);
 	const [departmentModalVisible, setDepartmentModalVisible] = useState(false);
@@ -38,7 +43,7 @@ const GroupPage = () => {
 	const [itemsToShow, setItemsToShow] = useState(5);
 	const [noticeListVisible, setNoticeListVisible] = useState(true);
 	const [departmentList, setDepartmentList] = useState<DepartmentInfo[]>([]);
-	const [departmentInfo, setDepartmentInfo] = useState({ name: "", member: "", tags: "" });
+	const [departmentInfo, setDepartmentInfo] = useState<DepartmentInfoCreatePayload>({ name: "", member: [], tags: [] });
 	const [messageCharCount, setMessageCharCount] = useState<number>(0);
 	const [currentMessageIndex, setCurrentMessageIndex] = useState<number>(0);
 	const [keywordInput, setKeywordInput] = useState<string>("");
@@ -54,9 +59,9 @@ const GroupPage = () => {
 		try {
 			const { data, error } = await supabase.from("Notice").select("*");
 			if (error) throw error;
-			setNotices(data || []);
+			setNoticeList(data || []);
 		} catch (error) {
-			console.error("공지사항을 불러오는 중 오류가 발생했습니다:", message);
+			console.error("공지사항을 불러오는 중 오류가 발생했습니다:", error);
 		}
 	};
 
@@ -64,14 +69,14 @@ const GroupPage = () => {
 		e.preventDefault();
 
 		try {
-			const { error } = await supabase.from("Notice").insert([newNotice]);
+			const { data, error } = await supabase.from("Notice").insert([newNotice]).select("*");
 			if (error) throw error;
 
 			setNoticeModalVisible(false);
-			setNotices((prev) => [...prev, newNotice]);
+			if (data && data.length > 0) setNoticeList((prev) => [...prev, data[0]]);
 			setNewNotice({ title: "", content: "", keyword: [], date: new Date() });
 		} catch (error) {
-			console.error("공지사항을 등록하는 중 오류가 발생했습니다:", message);
+			console.error("공지사항을 등록하는 중 오류가 발생했습니다:", error);
 		}
 	};
 
@@ -115,7 +120,7 @@ const GroupPage = () => {
 			if (error) throw error;
 			setDepartmentList(data || []);
 		} catch (error) {
-			console.error("마을 정보를 불러오는 중 오류가 발생했습니다:", message);
+			console.error("마을 정보를 불러오는 중 오류가 발생했습니다:", error);
 		}
 	};
 
@@ -208,16 +213,16 @@ const GroupPage = () => {
 		}
 	};
 
-	const deleteNotice = async (title: string, content: string) => {
+	const deleteNotice = async (id: number) => {
 		const confirmDelete = confirm("정말로 삭제하시겠습니까? 내용이 다시 복구되지 않습니다.");
 
 		if (!confirmDelete) return;
 
 		try {
-			const { error } = await supabase.from("Notice").delete().match({ title, content });
+			const { error } = await supabase.from("Notice").delete().eq("id", id);
 			if (error) throw error;
 
-			setNotices(notices.filter((notice) => notice.title !== title || notice.content !== content));
+			setNoticeList(noticeList.filter((notice) => notice.id !== id));
 			setSelectedNoticeModalVisible(false);
 			router.push("/group/department");
 		} catch (error) {
@@ -280,7 +285,7 @@ const GroupPage = () => {
 				</div>
 				<div className="flex flex-col">
 					<ul className={`overflow-hidden transition-all ${noticeListVisible ? "max-h-[200px]" : "max-h-0"} flex flex-col gap-2 hover:cursor-pointer`}>
-						{notices.slice(0, itemsToShow).map((notice, index) => (
+						{noticeList.slice(0, itemsToShow).map((notice, index) => (
 							<li key={index} onClick={() => handleNoticeClick(notice)} className="flex justify-between">
 								<div className="flex">
 									<p>{index + 1}。</p>
@@ -294,12 +299,12 @@ const GroupPage = () => {
 						))}
 					</ul>
 					{/* // TODO: 토글 : 최대 7, 6, 5개 -- 최소 기기별 최소 갯수 */}
-					{notices.length > itemsToShow && <button>{noticeListVisible ? "▼" : "▲"}</button>}
+					{noticeList.length > itemsToShow && <button>{noticeListVisible ? "▼" : "▲"}</button>}
 				</div>
 
 				{noticeModalVisible && (
 					<div className="fixed left-0 top-0 z-10 flex h-full w-full items-center justify-center bg-slate-400 bg-opacity-50">
-						<div className="flex w-4/5 flex-col gap-3 rounded-lg bg-white p-6 shadow-lg">
+						<div className="flex h-[650px] w-[1000px] flex-col gap-3 rounded-lg bg-white p-6 shadow-lg">
 							<div className="flex flex-col items-center">
 								<h2>공지 등록</h2>
 								<div className="my-2 w-full border-b border-b-black" />
@@ -367,7 +372,7 @@ const GroupPage = () => {
 										value={newNotice.content}
 										onChange={handleInputChange}
 										placeholder="내용을 입력해주세요."
-										className="h-[300px] w-full rounded-2xl border p-4"
+										className="h-[320px] w-full rounded-2xl border p-4"
 									/>
 								</label>
 								<div className="flex justify-end gap-4">
@@ -385,7 +390,7 @@ const GroupPage = () => {
 
 				{selectedNoticeModalVisible && (
 					<div className="fixed left-0 top-0 z-10 flex h-full w-full items-center justify-center bg-slate-400 bg-opacity-50">
-						<div className="relative flex w-[1000px] flex-col gap-3 rounded-lg bg-white p-6 shadow-lg">
+						<div className="relative flex h-[650px] w-[1000px] flex-col gap-3 rounded-lg bg-white p-6 shadow-lg">
 							<div className="flex flex-col items-center">
 								<h2>공지사항 상세보기</h2>
 								<div className="my-2 w-full border-b border-b-black" />
@@ -397,38 +402,45 @@ const GroupPage = () => {
 									<CloseIcon />
 								</button>
 							</div>
-							<div className="flex w-full flex-col justify-between gap-4">
-								<div className="flex flex-col gap-4">
-									<div className="flex justify-between">
-										<h3>제목 | {selectedNotice?.title}</h3>
-										<div className="flex gap-4">
-											<button type="button" onClick={() => console.log("공지사항 수정")}>
-												수정하기
-											</button>
-											{/* // TODO: code가 지저분하므로 리팩토링 방법 찾기 */}
-											<button
-												type="button"
-												onClick={() => {
-													if (selectedNotice?.title && selectedNotice?.content) {
-														deleteNotice(selectedNotice.title, selectedNotice.content);
-													}
-												}}
-											>
-												삭제하기
-											</button>
+							{selectedNotice && (
+								<div className="flex w-full flex-col justify-between gap-4">
+									<div className="flex flex-col gap-4">
+										<div className="flex justify-between">
+											<h3>제목 | {selectedNotice.title}</h3>
+											<div className="flex gap-4">
+												<button
+													type="button"
+													onClick={() => {
+														setSelectedNoticeModalVisible(false);
+													}}
+												>
+													수정하기
+												</button>
+												{/* // TODO: code가 지저분하므로 리팩토링 방법 찾기 */}
+												<button
+													type="button"
+													onClick={() => {
+														if (selectedNotice) {
+															deleteNotice(selectedNotice.id);
+														}
+													}}
+												>
+													삭제하기
+												</button>
+											</div>
 										</div>
+										<p>키워드 | #{selectedNotice.keyword.join(" #")}</p>
+										<p className="absolute right-6 top-8 flex items-center gap-2">
+											{newNotice.date.toISOString().replace("T", " ").split(":").slice(0, 2).join(":")}
+										</p>
 									</div>
-									<p>키워드 | #{selectedNotice?.keyword.join(" #")}</p>
-									<p className="absolute right-6 top-8 flex items-center gap-2">
-										{newNotice.date.toISOString().replace("T", " ").split(":").slice(0, 2).join(":")}
-									</p>
-								</div>
 
-								<div className="flex flex-col gap-1">
-									<p>내용</p>
-									<span className="h-[500px] rounded-lg border p-2">{selectedNotice?.content}</span>
+									<div className="flex flex-col gap-1">
+										<p>내용</p>
+										<span className="h-[450px] rounded-lg border p-2">{selectedNotice.content}</span>
+									</div>
 								</div>
-							</div>
+							)}
 						</div>
 					</div>
 				)}
@@ -459,7 +471,7 @@ const GroupPage = () => {
 									name="member"
 									type="text"
 									value={departmentInfo.member}
-									onChange={(e) => setDepartmentInfo({ ...departmentInfo, member: e.target.value })}
+									onChange={(e) => setDepartmentInfo((prev) => ({ ...departmentInfo, member: [...prev.member, e.target.value] }))}
 									placeholder="마을 인원 수를 입력해주세요."
 									className="w-full rounded-2xl border p-4"
 								/>
@@ -471,7 +483,7 @@ const GroupPage = () => {
 									name="tags"
 									type="text"
 									value={departmentInfo.tags}
-									onChange={(e) => setDepartmentInfo({ ...departmentInfo, tags: e.target.value })}
+									onChange={(e) => setDepartmentInfo((prev) => ({ ...departmentInfo, tags: [...prev.tags, e.target.value] }))}
 									placeholder="태그를 입력해주세요."
 									className="w-full rounded-2xl border p-4"
 								/>
@@ -513,6 +525,7 @@ const GroupPage = () => {
 			</main>
 			<footer className="flex flex-col gap-2">
 				<form className="flex flex-col" onSubmit={onSubmit}>
+					{/* // TODO: 응원 {messageList.length}개를 하면 에러가 발생함 */}
 					<label htmlFor="encouragement">응원</label>
 					<textarea
 						id="encouragement"
