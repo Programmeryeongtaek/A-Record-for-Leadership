@@ -48,7 +48,6 @@ const GroupPage = () => {
 	const [currentMessageIndex, setCurrentMessageIndex] = useState<number>(0);
 	const [keywordInput, setKeywordInput] = useState<string>("");
 	const [filteredNoticeList, setFilteredNoticeList] = useState<Notice[]>([]);
-	const [additionalSearchVisible, setAdditionalSearchVisible] = useState<boolean>(false);
 	const [additionalKeywords, setAdditionalKeywords] = useState<string[]>(["", ""]);
 	const [additionalSearchCount, setAdditionalSearchCount] = useState<number>(0);
 
@@ -154,10 +153,11 @@ const GroupPage = () => {
 		}
 	};
 
-	const handleEnterKeyPress = (e: KeyboardEvent<HTMLInputElement>) => {
-		if (e.key === "Enter") {
-			addAdditionalSearch();
-		}
+	const resetSearch = () => {
+		setKeywordInput("");
+		setAdditionalKeywords(["", ""]);
+		setAdditionalSearchCount(0);
+		setFilteredNoticeList(noticeList);
 	};
 
 	const fetchDepartment = async () => {
@@ -348,6 +348,7 @@ const GroupPage = () => {
 					<button onClick={addAdditionalSearch} disabled={additionalKeywords.length >= 2} className="disabled:cursor-not-allowed">
 						추가 검색
 					</button>
+					{additionalKeywords.length >= 2 && <button onClick={resetSearch}>초기화</button>}
 				</div>
 				<div className="flex flex-col">
 					<ul className="flex max-h-[200px] flex-col gap-2 overflow-hidden transition-all hover:cursor-pointer">
