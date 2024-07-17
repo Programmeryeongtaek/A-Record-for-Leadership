@@ -48,7 +48,7 @@ const GroupPage = () => {
 	const [currentMessageIndex, setCurrentMessageIndex] = useState<number>(0);
 	const [keywordInput, setKeywordInput] = useState<string>("");
 	const [filteredNoticeList, setFilteredNoticeList] = useState<Notice[]>([]);
-	const [additionalKeywords, setAdditionalKeywords] = useState<string[]>(["", ""]);
+	const [additionalKeywords, setAdditionalKeywords] = useState<string[]>([]);
 	const [additionalSearchCount, setAdditionalSearchCount] = useState<number>(0);
 	const [additionalSearchVisible, setAdditionalSearchVisible] = useState<boolean>(false);
 
@@ -151,6 +151,7 @@ const GroupPage = () => {
 		newKeywords.splice(index, 1);
 		setAdditionalKeywords(newKeywords);
 		filterNotices(keywordInput, newKeywords);
+		setAdditionalSearchCount((prevCount) => prevCount - 1);
 	};
 
 	const addAdditionalSearch = () => {
@@ -162,10 +163,10 @@ const GroupPage = () => {
 
 	const resetSearch = () => {
 		setKeywordInput("");
-		setAdditionalKeywords(["", ""]);
-		setAdditionalSearchCount(0);
+		setAdditionalKeywords([]);
 		setFilteredNoticeList(noticeList);
-		setAdditionalSearchVisible(false);
+		setAdditionalSearchVisible(true);
+		setAdditionalSearchCount(0);
 	};
 
 	const fetchDepartment = async () => {
@@ -354,11 +355,11 @@ const GroupPage = () => {
 						</div>
 					))}
 					{additionalSearchVisible && (
-						<button onClick={addAdditionalSearch} disabled={!additionalSearchVisible} className="disabled:cursor-not-allowed">
+						<button onClick={addAdditionalSearch} disabled={additionalKeywords.length >= 2} className="disabled:hidden disabled:cursor-not-allowed">
 							추가 검색
 						</button>
 					)}
-					{additionalSearchCount >= 2 && <button onClick={resetSearch}>초기화</button>}
+					{additionalKeywords.length >= 2 && <button onClick={resetSearch}>초기화</button>}
 				</div>
 				<div className="flex flex-col">
 					<ul className="flex max-h-[200px] flex-col gap-2 overflow-hidden transition-all hover:cursor-pointer">
