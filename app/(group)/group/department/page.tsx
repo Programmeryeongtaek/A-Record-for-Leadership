@@ -345,7 +345,7 @@ const GroupPage = () => {
 							</button>
 						</div>
 					))}
-					<button onClick={addAdditionalSearch} disabled={additionalSearchCount >= 2} className="disabled:cursor-not-allowed">
+					<button onClick={addAdditionalSearch} disabled={additionalKeywords.length >= 2} className="disabled:cursor-not-allowed">
 						추가 검색
 					</button>
 				</div>
