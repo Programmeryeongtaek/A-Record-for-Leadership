@@ -50,6 +50,7 @@ const GroupPage = () => {
 	const [filteredNoticeList, setFilteredNoticeList] = useState<Notice[]>([]);
 	const [additionalKeywords, setAdditionalKeywords] = useState<string[]>(["", ""]);
 	const [additionalSearchCount, setAdditionalSearchCount] = useState<number>(0);
+	const [additionalSearchVisible, setAdditionalSearchVisible] = useState<boolean>(true);
 
 	const router = useRouter();
 	const keywordInputRef = useRef<HTMLInputElement>(null);
@@ -57,6 +58,11 @@ const GroupPage = () => {
 	useEffect(() => {
 		if (keywordInputRef.current) keywordInputRef.current.focus();
 	}, [newNotice.keyword, additionalKeywords, additionalSearchCount]);
+
+	useEffect(() => {
+		if (additionalSearchCount >= 2) setAdditionalSearchVisible(false);
+		else setAdditionalSearchVisible(true);
+	}, [additionalSearchCount]);
 
 	const fetchNotice = async () => {
 		try {
@@ -151,6 +157,7 @@ const GroupPage = () => {
 		if (additionalKeywords.length < 2) {
 			setAdditionalKeywords([...additionalKeywords, ""]);
 		}
+		setAdditionalSearchCount((prevCount) => prevCount + 1);
 	};
 
 	const resetSearch = () => {
@@ -158,6 +165,7 @@ const GroupPage = () => {
 		setAdditionalKeywords(["", ""]);
 		setAdditionalSearchCount(0);
 		setFilteredNoticeList(noticeList);
+		setAdditionalSearchVisible(false);
 	};
 
 	const fetchDepartment = async () => {
@@ -345,10 +353,12 @@ const GroupPage = () => {
 							</button>
 						</div>
 					))}
-					<button onClick={addAdditionalSearch} disabled={additionalKeywords.length >= 2} className="disabled:cursor-not-allowed">
-						추가 검색
-					</button>
-					{additionalKeywords.length >= 2 && <button onClick={resetSearch}>초기화</button>}
+					{additionalSearchVisible && (
+						<button onClick={addAdditionalSearch} disabled={additionalKeywords.length >= 2} className="disabled:cursor-not-allowed">
+							추가 검색
+						</button>
+					)}
+					{!additionalSearchVisible && additionalKeywords.length >= 2 && <button onClick={resetSearch}>초기화</button>}
 				</div>
 				<div className="flex flex-col">
 					<ul className="flex max-h-[200px] flex-col gap-2 overflow-hidden transition-all hover:cursor-pointer">
