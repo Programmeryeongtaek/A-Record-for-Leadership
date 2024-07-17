@@ -48,13 +48,16 @@ const GroupPage = () => {
 	const [currentMessageIndex, setCurrentMessageIndex] = useState<number>(0);
 	const [keywordInput, setKeywordInput] = useState<string>("");
 	const [filteredNoticeList, setFilteredNoticeList] = useState<Notice[]>([]);
+	const [additionalSearchVisible, setAdditionalSearchVisible] = useState<boolean>(false);
+	const [additionalKeywords, setAdditionalKeywords] = useState<string[]>(["", ""]);
+	const [additionalSearchCount, setAdditionalSearchCount] = useState<number>(0);
 
 	const router = useRouter();
 	const keywordInputRef = useRef<HTMLInputElement>(null);
 
 	useEffect(() => {
 		if (keywordInputRef.current) keywordInputRef.current.focus();
-	}, [newNotice.keyword]);
+	}, [newNotice.keyword, additionalKeywords, additionalSearchCount]);
 
 	const fetchNotice = async () => {
 		try {
@@ -88,15 +91,19 @@ const GroupPage = () => {
 	};
 
 	const handleKeywordInputChange = (e: ChangeEvent<HTMLInputElement>) => {
-		setKeywordInput(e.target.value);
-		filterNotices(e.target.value);
+		const { value } = e.target;
+		setKeywordInput(value);
+		filterNotices(value, additionalKeywords);
 	};
 
-	const filterNotices = (keyword: string) => {
-		if (keyword.trim() === "") {
+	const filterNotices = (keyword: string, keywords: string[]) => {
+		if (keyword.trim() === "" && keywords.every((kw) => kw.trim() === "")) {
 			setFilteredNoticeList(noticeList);
 		} else {
-			const filteredNotices = noticeList.filter((notice) => notice.keyword.some((kw) => kw.toLowerCase().includes(keyword.toLowerCase())));
+			const allKeywords = [keyword, ...keywords];
+			const filteredNotices = noticeList.filter((notice) =>
+				allKeywords.every((kw) => kw.trim() === "" || notice.keyword.some((noticeKw) => noticeKw.toLowerCase().includes(kw.toLowerCase()))),
+			);
 			setFilteredNoticeList(filteredNotices);
 		}
 	};
@@ -123,6 +130,19 @@ const GroupPage = () => {
 		if (e.key === "Enter") {
 			e.preventDefault();
 			addKeyword();
+		}
+	};
+	const handleAdditionalKeywordInputChange = (index: number) => (e: ChangeEvent<HTMLInputElement>) => {
+		const { value } = e.target;
+		const newKeywords = [...additionalKeywords];
+		newKeywords[index] = value;
+		setAdditionalKeywords(newKeywords);
+		filterNotices(keywordInput, newKeywords);
+	};
+
+	const addAdditionalSearch = () => {
+		if (additionalSearchCount < 2) {
+			setAdditionalSearchCount(additionalSearchCount + 1);
 		}
 	};
 
@@ -295,8 +315,19 @@ const GroupPage = () => {
 					<h1>공지사항</h1>
 					<button onClick={() => setNoticeModalVisible(true)}>등록</button>
 				</div>
-				<div>
+				<div className="flex">
 					<input type="text" value={keywordInput} onChange={handleKeywordInputChange} placeholder="키워드 검색" />
+					{[...Array(additionalSearchCount)].map((_, index) => (
+						<div key={index}>
+							<input
+								type="text"
+								placeholder="추가 키워드 검색"
+								onChange={handleAdditionalKeywordInputChange(index)}
+								ref={index === additionalSearchCount - 1 ? keywordInputRef : null}
+							/>
+						</div>
+					))}
+					<button onClick={addAdditionalSearch}>추가 검색</button>
 				</div>
 				<div className="flex flex-col">
 					<ul className="flex max-h-[200px] flex-col gap-2 overflow-hidden transition-all hover:cursor-pointer">
