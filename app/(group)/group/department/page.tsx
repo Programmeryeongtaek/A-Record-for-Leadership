@@ -47,6 +47,7 @@ const GroupPage = () => {
 	const [messageCharCount, setMessageCharCount] = useState<number>(0);
 	const [currentMessageIndex, setCurrentMessageIndex] = useState<number>(0);
 	const [keywordInput, setKeywordInput] = useState<string>("");
+	const [filteredNoticeList, setFilteredNoticeList] = useState<Notice[]>([]);
 
 	const router = useRouter();
 	const keywordInputRef = useRef<HTMLInputElement>(null);
@@ -60,6 +61,7 @@ const GroupPage = () => {
 			const { data, error } = await supabase.from("Notice").select("*");
 			if (error) throw error;
 			setNoticeList(data || []);
+			setFilteredNoticeList(data || []);
 		} catch (error) {
 			console.error("공지사항을 불러오는 중 오류가 발생했습니다:", error);
 		}
@@ -87,6 +89,16 @@ const GroupPage = () => {
 
 	const handleKeywordInputChange = (e: ChangeEvent<HTMLInputElement>) => {
 		setKeywordInput(e.target.value);
+		filterNotices(e.target.value);
+	};
+
+	const filterNotices = (keyword: string) => {
+		if (keyword.trim() === "") {
+			setFilteredNoticeList(noticeList);
+		} else {
+			const filteredNotices = noticeList.filter((notice) => notice.keyword.some((kw) => kw.toLowerCase().includes(keyword.toLowerCase())));
+			setFilteredNoticeList(filteredNotices);
+		}
 	};
 
 	const addKeyword = () => {
@@ -242,7 +254,7 @@ const GroupPage = () => {
 			setDepartmentList(departmentList.filter((department) => department.id !== id));
 			router.push("/group/department");
 		} catch (error) {
-			alert("마을 정보를 삭제하는 데 싪패했습니다.");
+			alert("마을 정보를 삭제하는 데 실패했습니다.");
 		}
 	};
 
@@ -283,9 +295,12 @@ const GroupPage = () => {
 					<h1>공지사항</h1>
 					<button onClick={() => setNoticeModalVisible(true)}>등록</button>
 				</div>
+				<div>
+					<input type="text" value={keywordInput} onChange={handleKeywordInputChange} placeholder="키워드 검색" />
+				</div>
 				<div className="flex flex-col">
-					<ul className={`overflow-hidden transition-all ${noticeListVisible ? "max-h-[200px]" : "max-h-0"} flex flex-col gap-2 hover:cursor-pointer`}>
-						{noticeList.slice(0, itemsToShow).map((notice, index) => (
+					<ul className="flex max-h-[200px] flex-col gap-2 overflow-hidden transition-all hover:cursor-pointer">
+						{filteredNoticeList.map((notice, index) => (
 							<li key={index} onClick={() => handleNoticeClick(notice)} className="flex justify-between">
 								<div className="flex">
 									<p>{index + 1}。</p>
@@ -465,7 +480,7 @@ const GroupPage = () => {
 								/>
 							</label>
 							<label htmlFor="member">
-								마을 인원 수
+								마을 멤버
 								<input
 									id="member"
 									name="member"
