@@ -132,6 +132,7 @@ const GroupPage = () => {
 			addKeyword();
 		}
 	};
+
 	const handleAdditionalKeywordInputChange = (index: number) => (e: ChangeEvent<HTMLInputElement>) => {
 		const { value } = e.target;
 		const newKeywords = [...additionalKeywords];
@@ -140,9 +141,22 @@ const GroupPage = () => {
 		filterNotices(keywordInput, newKeywords);
 	};
 
+	const removeAdditionalKeyword = (index: number) => {
+		const newKeywords = [...additionalKeywords];
+		newKeywords.splice(index, 1);
+		setAdditionalKeywords(newKeywords);
+		filterNotices(keywordInput, newKeywords);
+	};
+
 	const addAdditionalSearch = () => {
-		if (additionalSearchCount < 2) {
-			setAdditionalSearchCount(additionalSearchCount + 1);
+		if (additionalKeywords.length < 2) {
+			setAdditionalKeywords([...additionalKeywords, ""]);
+		}
+	};
+
+	const handleEnterKeyPress = (e: KeyboardEvent<HTMLInputElement>) => {
+		if (e.key === "Enter") {
+			addAdditionalSearch();
 		}
 	};
 
@@ -317,17 +331,23 @@ const GroupPage = () => {
 				</div>
 				<div className="flex">
 					<input type="text" value={keywordInput} onChange={handleKeywordInputChange} placeholder="키워드 검색" />
-					{[...Array(additionalSearchCount)].map((_, index) => (
-						<div key={index}>
+					{additionalKeywords.map((keyword, index) => (
+						<div key={index} className="relative">
 							<input
 								type="text"
-								placeholder="추가 키워드 검색"
+								value={keyword}
 								onChange={handleAdditionalKeywordInputChange(index)}
-								ref={index === additionalSearchCount - 1 ? keywordInputRef : null}
+								placeholder="추가 키워드 검색"
+								className="w-[200px] rounded-lg border p-2"
 							/>
+							<button type="button" onClick={() => removeAdditionalKeyword(index)} className="absolute right-1 top-1">
+								<CloseIcon />
+							</button>
 						</div>
 					))}
-					<button onClick={addAdditionalSearch}>추가 검색</button>
+					<button onClick={addAdditionalSearch} disabled={additionalSearchCount >= 2} className="disabled:cursor-not-allowed">
+						추가 검색
+					</button>
 				</div>
 				<div className="flex flex-col">
 					<ul className="flex max-h-[200px] flex-col gap-2 overflow-hidden transition-all hover:cursor-pointer">
