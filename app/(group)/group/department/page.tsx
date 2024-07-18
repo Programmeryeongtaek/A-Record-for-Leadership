@@ -338,27 +338,33 @@ const GroupPage = () => {
 					<h1>공지사항</h1>
 					<button onClick={() => setNoticeModalVisible(true)}>등록</button>
 				</div>
-				<div className="flex">
-					<input type="text" value={keywordInput} onChange={handleKeywordInputChange} placeholder="키워드 검색" />
+				<div className="flex gap-4">
+					<input type="text" value={keywordInput} onChange={handleKeywordInputChange} placeholder="키워드 검색" className="w-[200px] rounded-lg border p-2" />
 					{additionalKeywords.map((keyword, index) => (
-						<div key={index} className="relative">
+						<div key={index} className="relative flex items-center justify-end">
 							<input
 								type="text"
 								value={keyword}
 								onChange={handleAdditionalKeywordInputChange(index)}
 								placeholder="추가 키워드 검색"
 								className="w-[200px] rounded-lg border p-2"
+								disabled={keywordInput.trim() === ""}
 							/>
-							<button type="button" onClick={() => removeAdditionalKeyword(index)} className="absolute right-1 top-1">
+							<button type="button" onClick={() => removeAdditionalKeyword(index)} className="absolute right-[6px]">
 								<CloseIcon />
 							</button>
 						</div>
 					))}
 					{additionalSearchVisible && (
-						<button onClick={addAdditionalSearch} disabled={additionalKeywords.length >= 2} className="disabled:hidden disabled:cursor-not-allowed">
+						<button
+							onClick={addAdditionalSearch}
+							disabled={additionalKeywords.length >= 2 || keywordInput.trim() === ""}
+							className="disabled:hidden disabled:cursor-not-allowed"
+						>
 							추가 검색
 						</button>
 					)}
+
 					{additionalKeywords.length >= 2 && <button onClick={resetSearch}>초기화</button>}
 				</div>
 				<div className="flex flex-col">
