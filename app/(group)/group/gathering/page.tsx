@@ -5,6 +5,7 @@ import { ChangeEvent, useState } from "react";
 
 const GatheringPage = () => {
 	const [file, setFile] = useState<File | null>(null);
+	const [imageUrl, setImageUrl] = useState<string | null>(null);
 
 	const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
 		if (e.target.files && e.target.files[0]) {
@@ -35,6 +36,7 @@ const GatheringPage = () => {
 
 		localStorage.setItem("uploaded_image_url", publicUrlData.publicUrl);
 
+		setImageUrl(publicUrlData.publicUrl);
 
 		console.log("File uploaded successfully: ", publicUrlData.publicUrl);
 	};
@@ -57,6 +59,11 @@ const GatheringPage = () => {
 				test
 				<input type="file" onChange={handleFileChange} />
 				<button onClick={handleUpload}>Upload</button>
+				{imageUrl && (
+					<div>
+						<img src={imageUrl} alt="Uploaded file" />
+					</div>
+				)}
 			</div>
 		</div>
 	);
