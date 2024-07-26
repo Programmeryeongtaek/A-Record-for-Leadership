@@ -1,46 +1,64 @@
 "use client";
 
 import { supabase } from "@/utils/supabase";
-import { ChangeEvent, useState } from "react";
+import Image from "next/image";
+import { ChangeEvent, useEffect, useState } from "react";
+
+const MAX_IMAGES = 10;
 
 const GatheringPage = () => {
-	const [file, setFile] = useState<File | null>(null);
-	const [imageUrl, setImageUrl] = useState<string | null>(null);
+	const [files, setFiles] = useState<File[]>([]);
+	const [imageUrls, setImageUrls] = useState<string[]>([]);
+
+	useEffect(() => {
+		const storedUrls = localStorage.getItem("uploaded_image_urls");
+		if (storedUrls) {
+			setImageUrls(JSON.parse(storedUrls));
+		}
+	}, []);
 
 	const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-		if (e.target.files && e.target.files[0]) {
-			setFile(e.target.files[0]);
+		if (e.target.files) {
+			const newFiles = Array.from(e.target.files);
+			if (newFiles.length + files.length > MAX_IMAGES) {
+				alert(`최대 ${MAX_IMAGES}개까지만 업로드 가능합니다.`);
+				return;
+			}
+			setFiles((prevFiles) => [...prevFiles, ...newFiles]);
 		}
 	};
 
 	const handleUpload = async () => {
-		if (!file) return;
+		if (files.length === 0) return;
 
-		const fileExt = file.name.split(".").pop();
-		const fileName = `${Date.now()}.${fileExt}`;
-		const filePath = `${fileName}`;
+		const newImageUrls: string[] = [];
 
-		const { data, error } = await supabase.storage.from("happycustomers").upload(filePath, file);
+		for (const file of files) {
+			const fileExt = file.name.split(".").pop();
+			const fileName = `${Date.now()}-${Math.random()}.${fileExt}`;
+			const filePath = `${fileName}`;
 
-		if (error) {
-			console.log("Error uplopading file: ", error);
-			return;
+			const { data, error } = await supabase.storage.from("happycustomers").upload(filePath, file);
+
+			if (error) {
+				console.log("Error uploading file: ", error);
+				continue;
+			}
+
+			const { data: publicUrlData, error: urlError } = supabase.storage.from("happycustomers").getPublicUrl(filePath);
+
+			if (urlError || !publicUrlData) {
+				console.error("Error getting public URL: ", urlError);
+				continue;
+			}
+
+			newImageUrls.push(publicUrlData.publicUrl);
 		}
-
-		const { data: publicUrlData, error: urlError } = supabase.storage.from("happycustomers").getPublicUrl(filePath);
-
-		if (urlError || !publicUrlData) {
-			console.error("Error getting public url: ", urlError);
-			return;
-		}
-
-		localStorage.setItem("uploaded_image_url", publicUrlData.publicUrl);
-
-		setImageUrl(publicUrlData.publicUrl);
-
-		console.log("File uploaded successfully: ", publicUrlData.publicUrl);
+		setImageUrls((prevUrls) => [...prevUrls, ...newImageUrls]);
+		setFiles([]); // Clear files after uploading
+		localStorage.setItem("uploaded_image_urls", JSON.stringify(newImageUrls));
+		console.log("Files uploaded successfully: ", newImageUrls);
 	};
-
 	return (
 		<div>
 			{/* // TODO: dropdown 진행중 / 완료 / 예정 */}
@@ -59,11 +77,11 @@ const GatheringPage = () => {
 				test
 				<input type="file" onChange={handleFileChange} />
 				<button onClick={handleUpload}>Upload</button>
-				{imageUrl && (
-					<div>
-						<img src={imageUrl} alt="Uploaded file" />
+				{imageUrls.map((url, index) => (
+					<div key={index} className="h-[400px] w-[400px]">
+						<Image src={url} alt={`Uploaded file ${index + 1}`} layout="responsive" objectFit="cover" width={200} height={200} />
 					</div>
-				)}
+				))}
 			</div>
 		</div>
 	);
