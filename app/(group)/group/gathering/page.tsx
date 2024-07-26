@@ -1,4 +1,44 @@
+"use client";
+
+import { supabase } from "@/utils/supabase";
+import { ChangeEvent, useState } from "react";
+
 const GatheringPage = () => {
+	const [file, setFile] = useState<File | null>(null);
+
+	const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+		if (e.target.files && e.target.files[0]) {
+			setFile(e.target.files[0]);
+		}
+	};
+
+	const handleUpload = async () => {
+		if (!file) return;
+
+		const fileExt = file.name.split(".").pop();
+		const fileName = `${Date.now()}.${fileExt}`;
+		const filePath = `${fileName}`;
+
+		const { data, error } = await supabase.storage.from("happycustomers").upload(filePath, file);
+
+		if (error) {
+			console.log("Error uplopading file: ", error);
+			return;
+		}
+
+		const { data: publicUrlData, error: urlError } = supabase.storage.from("happycustomers").getPublicUrl(filePath);
+
+		if (urlError || !publicUrlData) {
+			console.error("Error getting public url: ", urlError);
+			return;
+		}
+
+		localStorage.setItem("uploaded_image_url", publicUrlData.publicUrl);
+
+
+		console.log("File uploaded successfully: ", publicUrlData.publicUrl);
+	};
+
 	return (
 		<div>
 			{/* // TODO: dropdown 진행중 / 완료 / 예정 */}
@@ -13,7 +53,11 @@ const GatheringPage = () => {
 					모집중 | 진행중 | 완료
 				</div>
 			</div>
-			<div>test</div>
+			<div>
+				test
+				<input type="file" onChange={handleFileChange} />
+				<button onClick={handleUpload}>Upload</button>
+			</div>
 		</div>
 	);
 };
